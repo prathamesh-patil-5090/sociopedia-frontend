@@ -3,19 +3,30 @@ const API_URL = process.env.VITE_API_URL;
 class RegisterService {
   static async register(formData) {
     try {
+      console.log("Sending registration request to:", `${API_URL}/register/`);
+      
       const response = await fetch(`${API_URL}/register/`, {
         method: "POST",
         body: formData,
       });
 
       const data = await response.json();
+      console.log("Registration response:", response.status, data);
 
       if (!response.ok) {
-        throw new Error(data.error || data.message || 'Registration failed');
+        // If it's a validation error, show detailed field errors
+        if (data.errors) {
+          const errorMessages = Object.entries(data.errors)
+            .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+            .join('\n');
+          throw new Error(errorMessages);
+        }
+        throw new Error(data.error || data.message || `Registration failed (${response.status})`);
       }
 
       return data;
     } catch (error) {
+      console.error("Registration service error:", error);
       throw new Error(error.message || "Network error occurred");
     }
   }
@@ -38,10 +49,10 @@ class RegisterService {
   static createFormData(values) {
     const formData = new FormData();
     
-    // Django expects these field names
+    // Backend expects these field names (camelCase, not snake_case)
     const fieldMapping = {
-      "firstName": "first_name",
-      "lastName": "last_name",
+      "firstName": "firstName",
+      "lastName": "lastName",
       "email": "email",
       "password": "password",
       "location": "location", 

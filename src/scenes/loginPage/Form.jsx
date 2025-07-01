@@ -133,6 +133,14 @@ const Form = () => {
       }
 
       const formData = RegisterService.createFormData(values);
+      
+      // Debug: Log form data contents
+      console.log("Form values:", values);
+      console.log("FormData contents:");
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
+      }
+      
       await RegisterService.register(formData);
 
       setSubmitSuccess("Registration successful! Please login with your credentials.");

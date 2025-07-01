@@ -8,6 +8,7 @@ import {
 } from "@mui/icons-material";
 import FlexBetween from "./FlexBetween";
 import UserImage from "./UserImage";
+import AuthModal from "./AuthModal";
 import PostsService from "../services/PostsService";
 
 const CommentCard = ({ 
@@ -24,6 +25,7 @@ const CommentCard = ({
   const [editedText, setEditedText] = useState(comment.comment);
   const [isLiked, setIsLiked] = useState(comment.likes?.[currentUserId] || false);
   const [likeCount, setLikeCount] = useState(comment.likes_count || Object.keys(comment.likes || {}).length);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const handleUpdate = async () => {
     if (!comment._id) {
@@ -38,7 +40,7 @@ const CommentCard = ({
   const handleLike = async () => {
     // Check if user is authenticated
     if (!token || !currentUserId) {
-      console.log("User must be logged in to like comments");
+      setShowAuthModal(true);
       return;
     }
 
@@ -110,6 +112,13 @@ const CommentCard = ({
           )}
         </FlexBetween>
       </FlexBetween>
+
+      {/* Authentication Modal */}
+      <AuthModal
+        open={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        action="like"
+      />
     </Box>
   );
 };

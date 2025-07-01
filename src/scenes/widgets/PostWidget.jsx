@@ -19,6 +19,8 @@ import FlexBetween from "components/FlexBetween";
 import Friend from "components/Friend";
 import UserImage from "components/UserImage";
 import WidgetWrapper from "components/WidgetWrapper";
+import AuthModal from "components/AuthModal";
+import CommentAuthModal from "components/CommentAuthModal";
 import { useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setPost, setPosts } from "state";
@@ -41,6 +43,10 @@ const PostWidget = ({
   const [imageError, setImageError] = useState("");
   const [shareAnchorEl, setShareAnchorEl] = useState(null);
   const [showCopySuccess, setShowCopySuccess] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showCommentModal, setShowCommentModal] = useState(false);
+  const [authModalAction, setAuthModalAction] = useState('like');
+  const [lastModalCloseTime, setLastModalCloseTime] = useState(0);
   const dispatch = useDispatch();
   const token = useSelector((state) => state.token);
   const loggedInUser = useSelector((state) => state.user) || {};
@@ -64,6 +70,28 @@ const PostWidget = ({
     return String(loggedInUserId) === String(postUserId);
   }, [loggedInUserId, postUserId]);
 
+  const handleModalClose = () => {
+    setShowAuthModal(false);
+    // Clear any input focus by blurring active element
+    if (document.activeElement) {
+      document.activeElement.blur();
+    }
+  };
+
+  const handleCommentModalClose = () => {
+    setShowCommentModal(false);
+    setLastModalCloseTime(Date.now());
+    if (document.activeElement) {
+      (document.activeElement).blur();
+    }
+  };
+
+  const openCommentModal = () => {
+    if (Date.now() - lastModalCloseTime > 500) {
+      setShowCommentModal(true);
+    }
+  };
+
   // Get the actual ID whether postUserId is an object or string
   const actualPostUserId = useMemo(() => {
     return typeof postUserId === 'object' ? postUserId._id || postUserId.userId : postUserId;
@@ -72,7 +100,8 @@ const PostWidget = ({
   const patchLike = async () => {
     // Check if user is authenticated
     if (!token || !loggedInUserId) {
-      console.log("User must be logged in to like posts");
+      setAuthModalAction('like');
+      setShowAuthModal(true);
       return;
     }
 
@@ -105,6 +134,14 @@ const PostWidget = ({
   };
 
   const addComment = async () => {
+    // Check if user is authenticated
+    if (!token || !loggedInUserId) {
+      if (!showCommentModal) {
+        setShowCommentModal(true);
+      }
+      return;
+    }
+
     try {
       if (!comment.trim()) return;
 
@@ -527,10 +564,9 @@ const PostWidget = ({
           <FlexBetween gap="0.3rem">
             <IconButton 
               onClick={patchLike} 
-              disabled={!props.isAuth || isDummyUser}
               sx={{ 
                 color: (!props.isAuth || isDummyUser) ? "gray" : "inherit",
-                cursor: (!props.isAuth || isDummyUser) ? "not-allowed" : "pointer" 
+                cursor: "pointer" 
               }}
             >
               {isLiked ? (
@@ -545,10 +581,9 @@ const PostWidget = ({
           <FlexBetween gap="0.3rem">
             <IconButton 
               onClick={() => setIsComments(!isComments)}
-              disabled={!props.isAuth || isDummyUser}
               sx={{ 
-                color: (!props.isAuth || isDummyUser) ? "gray" : "inherit",
-                cursor: (!props.isAuth || isDummyUser) ? "not-allowed" : "pointer" 
+                color: "inherit",
+                cursor: "pointer" 
               }}
             >
               <ChatBubbleOutlineOutlined />
@@ -615,28 +650,38 @@ const PostWidget = ({
           </Alert>
         </Snackbar>
       </FlexBetween>
-      {props.isAuth && !isDummyUser && isComments && (
+      {isComments && (
         <Box mt="0.5rem">
           <InputBase
-            placeholder="Write a comment..."
+            placeholder={token && loggedInUserId ? "Write a comment..." : "Log in to write a comment..."}
             value={comment}
-            onChange={(e) => setComment(e.target.value)}
+            onChange={(e) => {
+              if (!token || !loggedInUserId) {
+                openCommentModal();
+                return;
+              }
+              setComment(e.target.value);
+            }}
+            onFocus={openCommentModal}
+            onClick={openCommentModal}
             sx={{
               width: "100%",
               backgroundColor: palette.neutral.light,
               borderRadius: "2rem",
               padding: "0.5rem 2rem",
-              marginBottom: "1rem"
+              marginBottom: "1rem",
+              cursor: "pointer",
             }}
           />
-          <Button
-            disabled={!comment}
-            onClick={addComment}
-            sx={{
-              color: !comment ? palette.neutral.medium : palette.background.alt,
-              backgroundColor: !comment ? palette.neutral.light : palette.primary.main,
-              borderRadius: "3rem",
-              marginBottom: "1rem",
+          {token && loggedInUserId && (
+            <Button
+              disabled={!comment}
+              onClick={addComment}
+              sx={{
+                color: !comment ? palette.neutral.medium : palette.background.alt,
+                backgroundColor: !comment ? palette.neutral.light : palette.primary.main,
+                borderRadius: "3rem",
+                marginBottom: "1rem",
               padding: "0.5rem 1.5rem",
               fontWeight: "bold",
               textTransform: "none",
@@ -660,6 +705,7 @@ const PostWidget = ({
           >
             Post Comment
           </Button>
+          )}
           {Array.isArray(props.comments) && props.comments.map((comment, index) => (
             <Box key={comment._id || `temp-comment-${index}`}>
               <Divider />
@@ -685,6 +731,19 @@ const PostWidget = ({
           <Divider />
         </Box>
       )}
+
+      {/* Authentication Modal */}
+      <AuthModal
+        open={showAuthModal}
+        onClose={handleModalClose}
+        action={authModalAction}
+      />
+
+      {/* Comment Authentication Modal */}
+      <CommentAuthModal
+        open={showCommentModal}
+        onClose={handleCommentModalClose}
+      />
     </WidgetWrapper>
   );
 };

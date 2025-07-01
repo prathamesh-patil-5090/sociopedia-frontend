@@ -1,7 +1,5 @@
 import {
   ManageAccountsOutlined,
-  LocationOnOutlined,
-  WorkOutlineOutlined,
   PeopleOutlined,
   EditOutlined,
 } from "@mui/icons-material";
@@ -45,8 +43,6 @@ const UserWidget = ({ userId, picturePath, isProfilePage = false }) => {
   const {
     firstName,
     lastName,
-    location,
-    occupation,
     viewedProfile,
     impressions,
     friends,
@@ -181,76 +177,6 @@ const UserWidget = ({ userId, picturePath, isProfilePage = false }) => {
       {/* Show details if it's either non-mobile or profile page */}
       {(isNonMobileScreens || isProfilePage) && (
         <>
-          {/* SECOND ROW - Location & Occupation */}
-          <Box p="1rem 0">
-            <Box 
-              display="flex" 
-              alignItems="center" 
-              gap="1rem" 
-              mb="0.75rem"
-              sx={{
-                padding: "0.75rem",
-                borderRadius: "8px",
-                backgroundColor: theme.palette.neutral.light,
-                border: `1px solid ${theme.palette.divider}`,
-                transition: "all 0.3s ease",
-                "&:hover": {
-                  backgroundColor: theme.palette.mode === "dark" 
-                    ? theme.palette.primary.main + "08" 
-                    : theme.palette.primary.main + "05",
-                  borderColor: theme.palette.primary.main + "40",
-                  transform: "translateX(2px)",
-                }
-              }}
-            >
-              <LocationOnOutlined sx={{ 
-                color: theme.palette.neutral.medium, 
-                fontSize: "20px" 
-              }} />
-              <Typography 
-                color={theme.palette.neutral.main} 
-                fontWeight="500" 
-                fontSize="0.9rem"
-              >
-                {location || "No location specified"}
-              </Typography>
-            </Box>
-            
-            <Box 
-              display="flex" 
-              alignItems="center" 
-              gap="1rem"
-              sx={{
-                padding: "0.75rem",
-                borderRadius: "8px",
-                backgroundColor: theme.palette.neutral.light,
-                border: `1px solid ${theme.palette.divider}`,
-                transition: "all 0.3s ease",
-                "&:hover": {
-                  backgroundColor: theme.palette.mode === "dark" 
-                    ? theme.palette.primary.main + "08" 
-                    : theme.palette.primary.main + "05",
-                  borderColor: theme.palette.primary.main + "40",
-                  transform: "translateX(2px)",
-                }
-              }}
-            >
-              <WorkOutlineOutlined sx={{ 
-                color: theme.palette.neutral.medium, 
-                fontSize: "20px" 
-              }} />
-              <Typography 
-                color={theme.palette.neutral.main} 
-                fontWeight="500" 
-                fontSize="0.9rem"
-              >
-                {occupation || "No occupation specified"}
-              </Typography>
-            </Box>
-          </Box>
-
-          <Divider sx={{ backgroundColor: theme.palette.divider, height: "1px" }} />
-
           {/* THIRD ROW - Profile Stats */}
           <Box p="1rem 0">
             <FlexBetween mb="0.75rem">

@@ -60,8 +60,6 @@ class RegisterService {
       "lastName": "lastName",
       "email": "email",
       "password": "password",
-      "location": "location", 
-      "occupation": "occupation",
       "username": "username"
     };
     

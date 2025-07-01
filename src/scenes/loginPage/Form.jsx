@@ -28,8 +28,6 @@ const registerSchema = yup.object().shape({
     .required("Password is required")
     .min(6, "Password must be at least 6 characters")
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, "Password must contain uppercase, lowercase, and number"),
-  location: yup.string().required("Location is required").min(2, "Too short"),
-  occupation: yup.string().required("Occupation is required").min(2, "Too short"),
   username: yup.string()
     .required("Username is required")
     .min(3, "Username must be at least 3 characters")
@@ -60,8 +58,6 @@ const initialValuesRegister = {
   lastName: "",
   email: "",
   password: "",
-  location: "",
-  occupation: "",
   picture: null,
   username: "",
   confirmPassword: "",
@@ -279,28 +275,6 @@ const Form = () => {
                   name="email"
                   error={Boolean(touched.email) && Boolean(errors.email)}
                   helperText={touched.email && errors.email}
-                  sx={{ gridColumn: "span 4" }}
-                  disabled={isLoading}
-                />
-                <TextField
-                  label="Location"
-                  onBlur={handleBlur}
-                  onChange={handleChange}
-                  value={values.location}
-                  name="location"
-                  error={Boolean(touched.location) && Boolean(errors.location)}
-                  helperText={touched.location && errors.location}
-                  sx={{ gridColumn: "span 4" }}
-                  disabled={isLoading}
-                />
-                <TextField
-                  label="Occupation"
-                  onBlur={handleBlur}
-                  onChange={handleChange}
-                  value={values.occupation}
-                  name="occupation"
-                  error={Boolean(touched.occupation) && Boolean(errors.occupation)}
-                  helperText={touched.occupation && errors.occupation}
                   sx={{ gridColumn: "span 4" }}
                   disabled={isLoading}
                 />

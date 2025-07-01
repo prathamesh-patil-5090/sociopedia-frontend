@@ -3,6 +3,7 @@ import HomePage from "scenes/homePage";
 import LoginPage from "scenes/loginPage";
 import ProfilePage from "scenes/profilePage";
 import ForgotPassword from "scenes/loginPage/ForgotPassword";
+import Auth0Callback from "scenes/auth0Callback";
 import { useMemo, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { CssBaseline, ThemeProvider } from "@mui/material";
@@ -11,6 +12,8 @@ import { themeSettings } from "./theme";
 import Footer from "components/Footer";
 import { Box } from "@mui/material";
 import { setLogout } from "state";
+import { Auth0Provider } from "@auth0/auth0-react";
+import auth0Config from "./config/auth0Config.js";
 
 function App() {
   const dispatch = useDispatch();
@@ -29,23 +32,34 @@ function App() {
 
   return (
     <div className="app">
-      <BrowserRouter>
-        <ThemeProvider theme={theme}>
-          <CssBaseline />
-          <Box display="flex" flexDirection="column" minHeight="100vh">
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route
-                path="/profile/:userId"
-                element={<ProfilePage />}
-              />
-            </Routes>
-            <Footer />
-          </Box>
-        </ThemeProvider>
-      </BrowserRouter>
+      <Auth0Provider
+        domain={auth0Config.domain}
+        clientId={auth0Config.clientId}
+        authorizationParams={{
+          redirect_uri: auth0Config.redirectUri,
+          audience: auth0Config.audience,
+          scope: auth0Config.scope
+        }}
+      >
+        <BrowserRouter>
+          <ThemeProvider theme={theme}>
+            <CssBaseline />
+            <Box display="flex" flexDirection="column" minHeight="100vh">
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/callback" element={<Auth0Callback />} />
+                <Route
+                  path="/profile/:userId"
+                  element={<ProfilePage />}
+                />
+              </Routes>
+              <Footer />
+            </Box>
+          </ThemeProvider>
+        </BrowserRouter>
+      </Auth0Provider>
     </div>
   );
 }

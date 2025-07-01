@@ -8,6 +8,7 @@ import {
   useTheme,
   Alert,
   CircularProgress,
+  Divider,
 } from "@mui/material";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import { Formik } from "formik";
@@ -19,6 +20,7 @@ import Dropzone from "react-dropzone";
 import FlexBetween from "components/FlexBetween";
 import RegisterService from "../../services/RegisterService";
 import LoginService from "../../services/LoginService";
+import { useAuth0Integration } from "../../services/Auth0Service";
 
 const registerSchema = yup.object().shape({
   firstName: yup.string().required("First name is required").min(2, "Too short").max(50, "Too long"),
@@ -81,6 +83,9 @@ const Form = () => {
   const isNonMobile = useMediaQuery("(min-width:600px)");
   const isLogin = pageType === "login";
   const isRegister = pageType === "register";
+  
+  // Auth0 integration
+  const { loginUser, isAuthenticated, isLoading: auth0Loading } = useAuth0Integration();
 
   // Check for signup URL parameter on component mount
   useEffect(() => {
@@ -435,6 +440,41 @@ const Form = () => {
                 isLogin ? "LOGIN" : "REGISTER"
               )}
             </Button>
+            
+            {isLogin && (
+              <>
+                <Divider sx={{ my: 2 }}>
+                  <Typography variant="body2" color="textSecondary">
+                    OR
+                  </Typography>
+                </Divider>
+                
+                <Button
+                  fullWidth
+                  onClick={() => loginUser()}
+                  disabled={isLoading || auth0Loading}
+                  sx={{
+                    p: "1rem",
+                    backgroundColor: "#ea5a0c",
+                    color: "white",
+                    "&:hover": { 
+                      backgroundColor: "#d04e00",
+                    },
+                    "&:disabled": {
+                      backgroundColor: palette.neutral.light,
+                      color: palette.neutral.medium
+                    },
+                    mb: 2
+                  }}
+                >
+                  {auth0Loading ? (
+                    <CircularProgress size={24} sx={{ color: "white" }} />
+                  ) : (
+                    "Continue with Auth0"
+                  )}
+                </Button>
+              </>
+            )}
             
             <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
               <Typography

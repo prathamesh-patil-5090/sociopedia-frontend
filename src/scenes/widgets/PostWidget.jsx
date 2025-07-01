@@ -87,8 +87,11 @@ const PostWidget = ({
   };
 
   const openCommentModal = () => {
-    if (Date.now() - lastModalCloseTime > 500) {
-      setShowCommentModal(true);
+    // Only show modal if user is not authenticated
+    if (!token || !loggedInUserId) {
+      if (Date.now() - lastModalCloseTime > 500) {
+        setShowCommentModal(true);
+      }
     }
   };
 
@@ -662,15 +665,23 @@ const PostWidget = ({
               }
               setComment(e.target.value);
             }}
-            onFocus={openCommentModal}
-            onClick={openCommentModal}
+            onFocus={(e) => {
+              if (!token || !loggedInUserId) {
+                openCommentModal();
+              }
+            }}
+            onClick={(e) => {
+              if (!token || !loggedInUserId) {
+                openCommentModal();
+              }
+            }}
             sx={{
               width: "100%",
               backgroundColor: palette.neutral.light,
               borderRadius: "2rem",
               padding: "0.5rem 2rem",
               marginBottom: "1rem",
-              cursor: "pointer",
+              cursor: token && loggedInUserId ? "text" : "pointer",
             }}
           />
           {token && loggedInUserId && (

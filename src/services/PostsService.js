@@ -1,8 +1,10 @@
+import axios from 'axios';
+
 const API_URL = process.env.VITE_API_URL;
 
 class PostsService {
-  // Get all posts
-  static async getPosts(token = null) {
+  // Get all posts with pagination
+  static async getPosts(token = null, page = 1, limit = 10) {
     try {
       const headers = {
         "Content-Type": "application/json",
@@ -19,24 +21,29 @@ class PostsService {
         headers.Authorization = `Bearer ${token}`;
       }
 
-      const response = await fetch(`${API_URL}/posts/`, {
-        method: "GET",
+      const response = await axios.get(`${API_URL}/posts/`, {
+        params: { page, limit },
         headers
       });
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch posts: ${response.status}`);
+      const data = response.data;
+      
+      // Handle both old format (array) and new format (object with posts and pagination)
+      if (Array.isArray(data)) {
+        return { posts: data, pagination: null };
       }
-
-      const data = await response.json();
-      return Array.isArray(data) ? data : [];
+      
+      return {
+        posts: Array.isArray(data.posts) ? data.posts : [],
+        pagination: data.pagination || null
+      };
     } catch (error) {
-      throw new Error(error.message || "Network error occurred");
+      throw new Error(error.response?.data?.message || error.message || "Network error occurred");
     }
   }
 
-  // Get user posts
-  static async getUserPosts(userId, token = null) {
+  // Get user posts with pagination
+  static async getUserPosts(userId, token = null, page = 1, limit = 10) {
     try {
       const headers = {
         "Content-Type": "application/json"
@@ -53,267 +60,207 @@ class PostsService {
         headers.Authorization = `Bearer ${token}`;
       }
 
-      const response = await fetch(`${API_URL}/posts/?user=${userId}`, {
-        method: "GET",
+      const response = await axios.get(`${API_URL}/posts/`, {
+        params: { user: userId, page, limit },
         headers,
       });
       
-      if (!response.ok) {
-        throw new Error(`Failed to fetch user posts: ${response.status}`);
+      const data = response.data;
+      
+      // Handle both old format (array) and new format (object with posts and pagination)
+      if (Array.isArray(data)) {
+        return { posts: data, pagination: null };
       }
-
-      const data = await response.json();
-      return Array.isArray(data) ? data : [];
+      
+      return {
+        posts: Array.isArray(data.posts) ? data.posts : [],
+        pagination: data.pagination || null
+      };
     } catch (error) {
-      throw new Error(error.message || "Network error occurred");
+      throw new Error(error.response?.data?.message || error.message || "Network error occurred");
     }
   }
 
   // Create post
   static async createPost(formData, token) {
     try {
-      const response = await fetch(`${API_URL}/posts/`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
+      const response = await axios.post(`${API_URL}/posts/`, formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to create post");
-      }
-
-      const post = await response.json();
+      const post = response.data;
       return post;
     } catch (error) {
-      throw new Error(error.message || "Network error occurred");
+      throw new Error(error.response?.data?.message || error.message || "Network error occurred");
     }
   }
 
   // Update post
   static async updatePost(postId, data, token) {
     try {
-      const response = await fetch(`${API_URL}/posts/${postId}/`, {
-        method: "PATCH",
+      const response = await axios.patch(`${API_URL}/posts/${postId}/`, data, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
+        }
       });
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const updatedPost = await response.json();
+      const updatedPost = response.data;
       return updatedPost;
     } catch (error) {
-      throw new Error(error.message || "Network error occurred");
+      throw new Error(error.response?.data?.message || error.message || "Network error occurred");
     }
   }
 
   // Delete post
   static async deletePost(postId, userId, token) {
     try {
-      const response = await fetch(`${API_URL}/posts/${postId}/`, {
-        method: "DELETE",
+      const response = await axios.delete(`${API_URL}/posts/${postId}/`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to delete post");
-      }
-      
       return { success: true };
     } catch (error) {
-      throw new Error(error.message || "Network error occurred");
+      throw new Error(error.response?.data?.message || error.message || "Network error occurred");
     }
   }
 
   // Like post
   static async likePost(postId, userId, token) {
     try {
-      const response = await fetch(`${API_URL}/posts/${postId}/like/`, {
-        method: "POST",
+      const response = await axios.post(`${API_URL}/posts/${postId}/like/`, {}, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to like post");
-      }
-
-      const result = await response.json();
+      const result = response.data;
       return result;
     } catch (error) {
-      throw new Error(error.message || "Network error occurred");
+      throw new Error(error.response?.data?.message || error.message || "Network error occurred");
     }
   }
 
   // Like comment
   static async likeComment(commentId, token) {
     try {
-      const response = await fetch(`${API_URL}/comments/${commentId}/like/`, {
-        method: "POST",
+      const response = await axios.post(`${API_URL}/comments/${commentId}/like/`, {}, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to like comment");
-      }
-
-      const result = await response.json();
+      const result = response.data;
       return result;
     } catch (error) {
-      throw new Error(error.message || "Network error occurred");
+      throw new Error(error.response?.data?.message || error.message || "Network error occurred");
     }
   }
 
   // Update post picture
   static async updatePostPicture(postId, formData, token) {
     try {
-      const response = await fetch(`${API_URL}/posts/${postId}/upload_picture/`, {
-        method: "PATCH",
+      const response = await axios.patch(`${API_URL}/posts/${postId}/upload_picture/`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
         },
-        body: formData,
       });
 
-      if (!response.ok) throw new Error("Failed to update picture");
-
-      const updatedPost = await response.json();
+      const updatedPost = response.data;
       return updatedPost;
     } catch (error) {
-      throw new Error(error.message || "Network error occurred");
+      throw new Error(error.response?.data?.message || error.message || "Network error occurred");
     }
   }
 
   // Delete post picture
   static async deletePostPicture(postId, userId, token) {
     try {
-      const response = await fetch(`${API_URL}/posts/${postId}/`, {
-        method: "PATCH",
+      const response = await axios.delete(`${API_URL}/posts/${postId}/delete_picture/`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ picture: null }),
+        data: { userId },
       });
 
-      if (!response.ok) throw new Error("Failed to delete picture");
-
-      const updatedPost = await response.json();
+      const updatedPost = response.data;
       return updatedPost;
     } catch (error) {
-      throw new Error(error.message || "Network error occurred");
+      throw new Error(error.response?.data?.message || error.message || "Network error occurred");
     }
   }
 
   // Add comment
   static async addComment(postId, commentData, token) {
     try {
-      const response = await fetch(`${API_URL}/comments/`, {
-        method: "POST",
+      const response = await axios.post(`${API_URL}/posts/${postId}/comments/`, commentData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          post_id: postId,
-          comment: commentData.comment,
-        }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to add comment");
-      }
-
-      const newComment = await response.json();
+      const newComment = response.data;
       return newComment;
     } catch (error) {
-      throw new Error(error.message || "Network error occurred");
+      throw new Error(error.response?.data?.message || error.message || "Network error occurred");
     }
   }
 
   // Update comment
   static async updateComment(postId, commentId, data, token) {
     try {
-      const response = await fetch(`${API_URL}/comments/${commentId}/`, {
-        method: "PATCH",
+      const response = await axios.patch(`${API_URL}/posts/${postId}/comments/${commentId}/`, data, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
       });
 
-      const responseData = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(responseData.message || "Failed to update comment");
-      }
-
-      return responseData;
+      const updatedComment = response.data;
+      return updatedComment;
     } catch (error) {
-      throw new Error(error.message || "Network error occurred");
+      throw new Error(error.response?.data?.message || error.message || "Network error occurred");
     }
   }
 
   // Delete comment
   static async deleteComment(postId, commentId, token) {
     try {
-      const response = await fetch(`${API_URL}/comments/${commentId}/`, {
-        method: "DELETE",
+      const response = await axios.delete(`${API_URL}/posts/${postId}/comments/${commentId}/`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to delete comment");
-      }
-
       return { success: true };
     } catch (error) {
-      throw new Error(error.message || "Network error occurred");
+      throw new Error(error.response?.data?.message || error.message || "Network error occurred");
     }
   }
 
   // Fetch image from the Django image API
   static async fetchImage(imagePath, token) {
     try {
-      if (!imagePath) {
-        throw new Error("Image path is required");
-      }
-
-      // Remove leading slash if present
       const cleanPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath;
-      
-      const response = await fetch(`${API_URL}/images/${cleanPath}`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await axios.get(`${API_URL}/images/${cleanPath}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        responseType: 'blob',
       });
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch image: ${response.status}`);
-      }
-
-      // Return the response so it can be used to get the blob or URL
-      return response;
+      return response.data;
     } catch (error) {
-      throw new Error(error.message || "Network error occurred");
+      throw new Error(error.response?.data?.message || error.message || "Failed to fetch image");
     }
   }
 
@@ -328,7 +275,7 @@ class PostsService {
     
     // Remove assets/ prefix if present since the API endpoint handles it
     if (cleanPath.startsWith('assets/')) {
-      cleanPath = cleanPath.slice(7); // Remove 'assets/'
+      cleanPath = cleanPath.substring(7);
     }
     
     // Return the full URL to the Django image API

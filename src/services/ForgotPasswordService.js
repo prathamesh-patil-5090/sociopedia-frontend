@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 // const API_URL = process.env.VITE_API_URL;
 
 class ForgotPasswordService {
@@ -9,27 +11,16 @@ class ForgotPasswordService {
       
       /*
       const API_URL = process.env.VITE_API_URL;
-      const response = await fetch(`${API_URL}/auth/forgot-password/`, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          email: email.trim(),
-          new_password: newPassword
-        }),
+      const response = await axios.post(`${API_URL}/auth/forgot-password/`, {
+        email: email.trim(),
+        new_password: newPassword
       });
 
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || data.message || "Password reset failed");
-      }
-
+      const data = response.data;
       return data;
       */
     } catch (error) {
-      throw new Error(error.message || "Network error occurred");
+      throw new Error(error.response?.data?.message || error.message || "Network error occurred");
     }
   }
 }

@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 const API_URL = process.env.VITE_API_URL;
 
 class ImageService {
@@ -22,13 +24,11 @@ class ImageService {
   // Download image
   static async downloadImage(filename, outputName = null) {
     try {
-      const response = await fetch(`${API_URL}/images/${filename}`);
+      const response = await axios.get(`${API_URL}/images/${filename}`, {
+        responseType: 'blob',
+      });
       
-      if (!response.ok) {
-        throw new Error(`Failed to download image: ${response.status}`);
-      }
-      
-      const blob = await response.blob();
+      const blob = response.data;
       const url = window.URL.createObjectURL(blob);
       
       // Create download link
@@ -42,18 +42,15 @@ class ImageService {
       
       return true;
     } catch (error) {
-      throw new Error(error.message || "Failed to download image");
+      throw new Error(error.response?.data?.message || error.message || "Failed to download image");
     }
   }
 
   // Check if image exists
   static async checkImageExists(filename) {
     try {
-      const response = await fetch(`${API_URL}/images/${filename}`, {
-        method: 'HEAD'
-      });
-      
-      return response.ok;
+      const response = await axios.head(`${API_URL}/images/${filename}`);
+      return response.status === 200;
     } catch (error) {
       return false;
     }
@@ -62,22 +59,16 @@ class ImageService {
   // Get image metadata
   static async getImageInfo(filename) {
     try {
-      const response = await fetch(`${API_URL}/images/${filename}`, {
-        method: 'HEAD'
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Image not found: ${response.status}`);
-      }
+      const response = await axios.head(`${API_URL}/images/${filename}`);
       
       return {
         exists: true,
-        contentType: response.headers.get('content-type'),
-        contentLength: response.headers.get('content-length'),
-        lastModified: response.headers.get('last-modified'),
+        contentType: response.headers['content-type'],
+        contentLength: response.headers['content-length'],
+        lastModified: response.headers['last-modified'],
       };
     } catch (error) {
-      throw new Error(error.message || "Failed to get image info");
+      throw new Error(error.response?.data?.message || error.message || "Failed to get image info");
     }
   }
 }

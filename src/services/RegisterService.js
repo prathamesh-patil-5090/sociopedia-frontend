@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 const API_URL = process.env.VITE_API_URL;
 
 class RegisterService {
@@ -5,29 +7,32 @@ class RegisterService {
     try {
       console.log("Sending registration request to:", `${API_URL}/register/`);
       
-      const response = await fetch(`${API_URL}/register/`, {
-        method: "POST",
-        body: formData,
+      const response = await axios.post(`${API_URL}/register/`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
 
-      const data = await response.json();
+      const data = response.data;
       console.log("Registration response:", response.status, data);
-
-      if (!response.ok) {
-        // If it's a validation error, show detailed field errors
-        if (data.errors) {
-          const errorMessages = Object.entries(data.errors)
-            .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
-            .join('\n');
-          throw new Error(errorMessages);
-        }
-        throw new Error(data.error || data.message || `Registration failed (${response.status})`);
-      }
-
       return data;
     } catch (error) {
       console.error("Registration service error:", error);
-      throw new Error(error.message || "Network error occurred");
+      
+      const data = error.response?.data;
+      
+      // If it's a validation error, show detailed field errors
+      if (data?.errors) {
+        const errorMessages = Object.entries(data.errors)
+          .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+          .join('\n');
+        throw new Error(errorMessages);
+      }
+      
+      const errorMessage = data?.error || 
+                          data?.message || 
+                          `Registration failed (${error.response?.status || 'Network Error'})`;
+      throw new Error(errorMessage);
     }
   }
 

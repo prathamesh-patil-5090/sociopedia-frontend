@@ -1,98 +1,95 @@
 import axios from 'axios';
+import TokenService from './TokenService';
+import ApiHelper from './ApiHelper';
 
 const API_URL = process.env.VITE_API_URL;
 
 class PostsService {
-  // Get all posts with pagination
+  // Get all posts with pagination (with automatic token refresh)
   static async getPosts(token = null, page = 1, limit = 10) {
     try {
-      const headers = {
-        "Content-Type": "application/json",
-      };
-      
-      // Only add Authorization header if token is a valid, non-empty string
-      const isValidToken = token && 
-                          typeof token === 'string' && 
-                          token.trim() !== '' && 
-                          token !== 'null' && 
-                          token !== 'undefined';
-      
-      if (isValidToken) {
-        headers.Authorization = `Bearer ${token}`;
-      }
+      // For posts, we can allow both authenticated and unauthenticated access
+      const { token: storedToken } = TokenService.getTokens();
+      const hasToken = storedToken || token;
 
-      const response = await axios.get(`${API_URL}/posts/`, {
-        params: { page, limit },
-        headers
-      });
-
-      const data = response.data;
-      
-      // Handle both old format (array) and new format (object with posts and pagination)
-      if (Array.isArray(data)) {
-        return { posts: data, pagination: null };
+      if (hasToken) {
+        // Use authenticated request with auto-refresh
+        const response = await ApiHelper.get('/posts/', { page, limit }, true);
+        const data = response.data;
+        
+        // Handle both old format (array) and new format (object with posts and pagination)
+        if (Array.isArray(data)) {
+          return { posts: data, pagination: null };
+        }
+        
+        return {
+          posts: Array.isArray(data.posts) ? data.posts : [],
+          pagination: data.pagination || null
+        };
+      } else {
+        // Use public request for unauthenticated users
+        const response = await ApiHelper.get('/posts/', { page, limit }, false);
+        const data = response.data;
+        
+        if (Array.isArray(data)) {
+          return { posts: data, pagination: null };
+        }
+        
+        return {
+          posts: Array.isArray(data.posts) ? data.posts : [],
+          pagination: data.pagination || null
+        };
       }
-      
-      return {
-        posts: Array.isArray(data.posts) ? data.posts : [],
-        pagination: data.pagination || null
-      };
     } catch (error) {
       throw new Error(error.response?.data?.message || error.message || "Network error occurred");
     }
   }
 
-  // Get user posts with pagination
+  // Get user posts with pagination (with automatic token refresh)
   static async getUserPosts(userId, token = null, page = 1, limit = 10) {
     try {
-      const headers = {
-        "Content-Type": "application/json"
-      };
-      
-      // Only add Authorization header if token is a valid, non-empty string
-      const isValidToken = token && 
-                          typeof token === 'string' && 
-                          token.trim() !== '' && 
-                          token !== 'null' && 
-                          token !== 'undefined';
-      
-      if (isValidToken) {
-        headers.Authorization = `Bearer ${token}`;
-      }
+      const { token: storedToken } = TokenService.getTokens();
+      const hasToken = storedToken || token;
 
-      const response = await axios.get(`${API_URL}/posts/`, {
-        params: { user: userId, page, limit },
-        headers,
-      });
-      
-      const data = response.data;
-      
-      // Handle both old format (array) and new format (object with posts and pagination)
-      if (Array.isArray(data)) {
-        return { posts: data, pagination: null };
+      if (hasToken) {
+        // Use authenticated request with auto-refresh
+        const response = await ApiHelper.get('/posts/', { user: userId, page, limit }, true);
+        const data = response.data;
+        
+        if (Array.isArray(data)) {
+          return { posts: data, pagination: null };
+        }
+        
+        return {
+          posts: Array.isArray(data.posts) ? data.posts : [],
+          pagination: data.pagination || null
+        };
+      } else {
+        // Use public request for unauthenticated users
+        const response = await ApiHelper.get('/posts/', { user: userId, page, limit }, false);
+        const data = response.data;
+        
+        if (Array.isArray(data)) {
+          return { posts: data, pagination: null };
+        }
+        
+        return {
+          posts: Array.isArray(data.posts) ? data.posts : [],
+          pagination: data.pagination || null
+        };
       }
-      
-      return {
-        posts: Array.isArray(data.posts) ? data.posts : [],
-        pagination: data.pagination || null
-      };
     } catch (error) {
       throw new Error(error.response?.data?.message || error.message || "Network error occurred");
     }
   }
 
-  // Create post
+  // Create post (with automatic token refresh)
   static async createPost(formData, token) {
     try {
-      const response = await axios.post(`${API_URL}/posts/`, formData, {
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
+      const response = await ApiHelper.post('/posts/', formData, true, {
+        'Content-Type': 'multipart/form-data'
       });
-
-      const post = response.data;
-      return post;
+      return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || error.message || "Network error occurred");
     }
@@ -131,18 +128,11 @@ class PostsService {
     }
   }
 
-  // Like post
+  // Like post (with automatic token refresh)
   static async likePost(postId, userId, token) {
     try {
-      const response = await axios.post(`${API_URL}/posts/${postId}/like/`, {}, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      const result = response.data;
-      return result;
+      const response = await ApiHelper.post(`/posts/${postId}/like/`, {}, true);
+      return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || error.message || "Network error occurred");
     }

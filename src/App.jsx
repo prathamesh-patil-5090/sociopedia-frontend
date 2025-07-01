@@ -10,37 +10,22 @@ import { createTheme } from "@mui/material/styles";
 import { themeSettings } from "./theme";
 import Footer from "components/Footer";
 import { Box } from "@mui/material";
-import { setLogin } from "state";
-import LoginService from "./services/LoginService";
+import { setLogout } from "state";
 
 function App() {
   const dispatch = useDispatch();
   const mode = useSelector((state) => state.mode);
   const theme = useMemo(() => createTheme(themeSettings(mode)), [mode]);
   const isAuth = Boolean(useSelector((state) => state.token));
-  const user = useSelector((state) => state.user);
+  const token = useSelector((state) => state.token);
 
+  // Clear any persisted invalid state on app load
   useEffect(() => {
-    const loginDummyUser = async () => {
-      if (!isAuth && !user) {
-        try {
-          const data = await LoginService.login({
-            usernameOrEmail: "dummy@gmail.com",
-            password: "dummy@gmail.com", // replace with actual dummy account password
-          });
-          
-          dispatch(setLogin({
-            user: data.user,
-            token: null // Keep token null to maintain restricted access
-          }));
-        } catch (error) {
-          console.error("Error logging in dummy user:", error);
-        }
-      }
-    };
-
-    loginDummyUser();
-  }, [dispatch, isAuth, user]);
+    // If there's an invalid token, clear the state
+    if (token && (typeof token !== 'string' || token.trim() === '' || token === 'null' || token === 'undefined')) {
+      dispatch(setLogout());
+    }
+  }, [token, dispatch]);
 
   return (
     <div className="app">
@@ -54,7 +39,7 @@ function App() {
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route
                 path="/profile/:userId"
-                element={isAuth ? <ProfilePage /> : <Navigate to="/login" />}
+                element={<ProfilePage />}
               />
             </Routes>
             <Footer />

@@ -11,7 +11,6 @@ const HomePage = () => {
   const isAuth = Boolean(useSelector((state) => state.token));
   const user = useSelector((state) => state.user) || {};
   const { _id, picturePath } = user;
-  const isDummyUser = user?._id === "67b1d55da90d9304b1f869d5";
 
   return (
     <Box display="flex" flexDirection="column" minHeight="100vh">
@@ -26,8 +25,8 @@ const HomePage = () => {
         alignItems="flex-start"
         flexGrow={1}
       >
-        {/* Left Column - UserWidget */}
-        {isAuth && !isDummyUser && isNonMobileScreens && (
+        {/* Left Column - UserWidget (only for authenticated users) */}
+        {isAuth && isNonMobileScreens && (
           <Box 
             flexBasis="26%" 
             sx={{
@@ -44,35 +43,52 @@ const HomePage = () => {
 
         {/* Middle Column - Posts */}
         <Box
-          flexBasis={isNonMobileScreens ? (isAuth && !isDummyUser ? "46%" : "74%") : "100%"}
+          flexBasis={isNonMobileScreens ? (isAuth ? "46%" : "74%") : "100%"}
           sx={{
             width: "100%",
           }}
         >
-          {isDummyUser && (
+          {!isAuth && (
             <Typography 
               variant="h5" 
               textAlign="center" 
               mb={2}
-              color="primary"
+              color="text.secondary"
+              sx={{ fontWeight: 300 }}
             >
-              Please login or register to interact with posts
+              Welcome to Socipedia! Browse posts or{" "}
+              <Typography 
+                component="span" 
+                color="primary" 
+                sx={{ 
+                  cursor: "pointer", 
+                  textDecoration: "underline",
+                  fontWeight: 500
+                }}
+                onClick={() => window.location.href = "/login"}
+              >
+                login
+              </Typography>
+              {" "}to interact
             </Typography>
           )}
           
-          {/* Mobile UserWidget */}
-          {isAuth && !isDummyUser && !isNonMobileScreens && (
+          {/* Mobile UserWidget (only for authenticated users) */}
+          {isAuth && !isNonMobileScreens && (
             <Box mb="2rem">
               <UserWidget userId={_id} picturePath={picturePath} />
             </Box>
           )}
           
-          {isAuth && !isDummyUser && <MyPostWidget picturePath={picturePath} />}
-          <PostsWidget userId={_id} isAuth={isAuth && !isDummyUser} />
+          {/* MyPostWidget (only for authenticated users) */}
+          {isAuth && <MyPostWidget picturePath={picturePath} />}
+          
+          {/* Posts are shown to everyone */}
+          <PostsWidget userId={_id} isAuth={isAuth} />
         </Box>
 
-        {/* Right Column - FriendListWidget */}
-        {isAuth && !isDummyUser && isNonMobileScreens && (
+        {/* Right Column - FriendListWidget (only for authenticated users) */}
+        {isAuth && isNonMobileScreens && (
           <Box 
             flexBasis="26%" 
             sx={{

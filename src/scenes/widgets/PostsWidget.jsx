@@ -28,7 +28,7 @@ const PostsWidget = ({ userId, isProfile = false, isAuth = false }) => {
   };
 
   const getUserPosts = async () => {
-    if (!token || !userId) return;
+    if (!userId) return;
     
     setLoading(true);
     setError(null);

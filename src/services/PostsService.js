@@ -2,14 +2,26 @@ const API_URL = process.env.VITE_API_URL;
 
 class PostsService {
   // Get all posts
-  static async getPosts(token) {
+  static async getPosts(token = null) {
     try {
+      const headers = {
+        "Content-Type": "application/json",
+      };
+      
+      // Only add Authorization header if token is a valid, non-empty string
+      const isValidToken = token && 
+                          typeof token === 'string' && 
+                          token.trim() !== '' && 
+                          token !== 'null' && 
+                          token !== 'undefined';
+      
+      if (isValidToken) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
       const response = await fetch(`${API_URL}/posts/`, {
         method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        }
+        headers
       });
 
       if (!response.ok) {
@@ -24,14 +36,26 @@ class PostsService {
   }
 
   // Get user posts
-  static async getUserPosts(userId, token) {
+  static async getUserPosts(userId, token = null) {
     try {
+      const headers = {
+        "Content-Type": "application/json"
+      };
+      
+      // Only add Authorization header if token is a valid, non-empty string
+      const isValidToken = token && 
+                          typeof token === 'string' && 
+                          token.trim() !== '' && 
+                          token !== 'null' && 
+                          token !== 'undefined';
+      
+      if (isValidToken) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
       const response = await fetch(`${API_URL}/posts/?user=${userId}`, {
         method: "GET",
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
+        headers,
       });
       
       if (!response.ok) {

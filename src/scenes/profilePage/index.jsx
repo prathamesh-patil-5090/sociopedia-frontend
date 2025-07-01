@@ -14,13 +14,14 @@ const ProfilePage = () => {
   const { userId } = useParams();
   const token = useSelector((state) => state.token);
   const loggedInUserId = useSelector((state) => state.user?._id);
+  const isAuth = Boolean(token);
   const isNonMobileScreens = useMediaQuery("(min-width:1000px)");
 
   // Improve the isOwnProfile check to handle type coercion
   const isOwnProfile = useMemo(() => {
-    if (!userId || !loggedInUserId) return false;
+    if (!userId || !loggedInUserId || !isAuth) return false;
     return String(userId) === String(loggedInUserId);
-  }, [userId, loggedInUserId]);
+  }, [userId, loggedInUserId, isAuth]);
 
   const getUser = async () => {
     try {
@@ -55,24 +56,27 @@ const ProfilePage = () => {
             isProfilePage={true}
           />
           <Box m="2rem 0" />
-          <FriendListWidget 
-            userId={userId}
-            isProfile={true}
-          />
+          {/* Only show FriendListWidget if user is authenticated */}
+          {isAuth && (
+            <FriendListWidget 
+              userId={userId}
+              isProfile={true}
+            />
+          )}
         </Box>
         <Box
           flexBasis={isNonMobileScreens ? "42%" : undefined}
           mt={isNonMobileScreens ? undefined : "2rem"}
         >
-          {/* Only show MyPostWidget if it's the user's own profile and they're not a dummy user */}
-          {isOwnProfile && token && (
+          {/* Only show MyPostWidget if it's the user's own profile and they're authenticated */}
+          {isOwnProfile && isAuth && (
             <MyPostWidget picturePath={user.picturePath || null} />
           )}
           <Box m="2rem 0" />
           <PostsWidget 
             userId={userId}
             isProfile={true}
-            isAuth={Boolean(token)}
+            isAuth={isAuth}
           />
         </Box>
       </Box>

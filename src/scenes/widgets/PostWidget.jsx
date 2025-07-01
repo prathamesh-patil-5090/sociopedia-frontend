@@ -70,6 +70,12 @@ const PostWidget = ({
   }, [postUserId]);
 
   const patchLike = async () => {
+    // Check if user is authenticated
+    if (!token || !loggedInUserId) {
+      console.log("User must be logged in to like posts");
+      return;
+    }
+
     try {
       const result = await PostsService.likePost(postId, loggedInUserId, token);
       

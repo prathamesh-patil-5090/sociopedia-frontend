@@ -36,6 +36,12 @@ const CommentCard = ({
   };
 
   const handleLike = async () => {
+    // Check if user is authenticated
+    if (!token || !currentUserId) {
+      console.log("User must be logged in to like comments");
+      return;
+    }
+
     try {
       const result = await PostsService.likeComment(comment._id, token);
       setIsLiked(result.liked);

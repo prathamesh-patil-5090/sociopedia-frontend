@@ -75,7 +75,6 @@ const Navbar = () => {
   const user = useSelector((state) => state.user) || {};
   const isNonMobileScreens = useMediaQuery("(min-width: 1000px)");
   const isAuth = Boolean(useSelector((state) => state.token));
-  const isDummyUser = user?._id === "67b1d55da90d9304b1f869d5";
 
   const theme = useTheme();
   const neutralLight = theme.palette.neutral.light;
@@ -222,9 +221,7 @@ const Navbar = () => {
             </IconButton>
           </Tooltip>
 
-          {isDummyUser ? (
-            <AuthButtons theme={theme} navigate={navigate} />
-          ) : isAuth ? (
+          {isAuth ? (
             <FlexBetween gap="1rem">
               {/* User Profile Section */}
               <Box display="flex" alignItems="center" gap="0.5rem">
@@ -296,46 +293,7 @@ const Navbar = () => {
               </Box>
             </FlexBetween>
           ) : (
-            <Box display="flex" gap="1rem" alignItems="center">
-              {/* Theme Toggle for non-auth users */}
-              <Tooltip title={`Switch to ${theme.palette.mode === "dark" ? "light" : "dark"} mode`}>
-                <IconButton
-                  onClick={() => dispatch(setMode())}
-                  sx={{
-                    backgroundColor: theme.palette.neutral.light,
-                    color: theme.palette.neutral.dark,
-                    padding: "0.5rem",
-                    "&:hover": {
-                      backgroundColor: theme.palette.primary.main,
-                      color: theme.palette.background.alt,
-                      transform: "rotate(180deg)",
-                    },
-                    transition: "all 0.3s ease",
-                  }}
-                >
-                  {theme.palette.mode === "dark" ? <LightMode /> : <DarkMode />}
-                </IconButton>
-              </Tooltip>
-              <Button
-                variant="outlined"
-                startIcon={<Person />}
-                onClick={() => navigate("/login")}
-                sx={{
-                  borderColor: theme.palette.primary.main,
-                  color: theme.palette.primary.main,
-                  padding: "0.5rem 1.5rem",
-                  borderRadius: "25px",
-                  textTransform: "none",
-                  fontWeight: 500,
-                  "&:hover": {
-                    backgroundColor: theme.palette.primary.main,
-                    color: theme.palette.background.alt,
-                  },
-                }}
-              >
-                Login
-              </Button>
-            </Box>
+            <AuthButtons theme={theme} navigate={navigate} />
           )}
         </FlexBetween>
       ) : (
@@ -464,11 +422,7 @@ const Navbar = () => {
               </IconButton>
             </FlexBetween>
 
-            {isDummyUser ? (
-              <Box mt="2rem">
-                <AuthButtons theme={theme} navigate={navigate} isMobile={true} />
-              </Box>
-            ) : isAuth ? (
+            {isAuth ? (
               <Box display="flex" flexDirection="column" gap="2rem" alignItems="center" mt="1rem">
                 <Box 
                   display="flex" 

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import TokenService from './TokenService';
+import TokenRefreshService from './TokenRefreshService';
 
 const API_URL = process.env.VITE_API_URL;
 
@@ -15,7 +15,7 @@ class LoginService {
       
       // Store tokens if login is successful
       if (data.access && data.refresh) {
-        TokenService.setTokens(data.access, data.refresh);
+        TokenRefreshService.setTokens(data.access, data.refresh);
         console.log('Login successful, tokens stored');
       }
       
@@ -31,8 +31,7 @@ class LoginService {
 
   // Logout method to clear tokens
   static logout() {
-    TokenService.clearTokens();
-    console.log('User logged out, tokens cleared');
+    TokenRefreshService.logout();
   }
 }
 

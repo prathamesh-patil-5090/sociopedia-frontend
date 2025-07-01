@@ -59,11 +59,14 @@ const HomePage = () => {
               Welcome to Socipedia! Browse posts or{" "}
               <Typography 
                 component="span" 
-                color="primary" 
                 sx={{ 
                   cursor: "pointer", 
                   textDecoration: "underline",
-                  fontWeight: 500
+                  fontWeight: 500,
+                  color: "#00d5ff", // Bright blue that works in both modes
+                  "&:hover": {
+                    color: "#0099cc",
+                  }
                 }}
                 onClick={() => window.location.href = "/login"}
               >

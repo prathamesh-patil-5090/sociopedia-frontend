@@ -4,6 +4,7 @@ import "./index.css";
 import App from "./App.jsx";
 import authReducer from "./state";
 import { configureStore } from "@reduxjs/toolkit";
+import { Auth0Provider } from "@auth0/auth0-react";
 import { Provider } from "react-redux";
 import {
   persistStore,
@@ -32,11 +33,19 @@ const store = configureStore({
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
-  <React.StrictMode>
-    <Provider store={store}>
-      <PersistGate loading={null} persistor={persistStore(store)}>
-        <App />
-      </PersistGate>
-    </Provider>
-  </React.StrictMode>
+  <Auth0Provider
+    domain="dev-adyzfstootqoalc2.us.auth0.com"
+    clientId="MDUa36K7uRg6iFxg1TkDZGqd7nsg48aI"
+    authorizationParams={{
+      redirect_uri: window.location.origin
+    }}
+  >
+    <React.StrictMode>
+      <Provider store={store}>
+        <PersistGate loading={null} persistor={persistStore(store)}>
+          <App />
+        </PersistGate>
+      </Provider>
+    </React.StrictMode>
+  </Auth0Provider>
 );

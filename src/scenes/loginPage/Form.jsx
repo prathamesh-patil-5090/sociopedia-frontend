@@ -20,7 +20,9 @@ import Dropzone from "react-dropzone";
 import FlexBetween from "components/FlexBetween";
 import RegisterService from "../../services/RegisterService";
 import LoginService from "../../services/LoginService";
-import { useAuth0Integration } from "../../services/Auth0Service";
+import LoginButton from "../../components/LoginButton";
+import GoogleLoginButton from "../../components/GoogleLoginButton";
+import GoogleOAuthService from "../../services/GoogleOAuthService";
 
 const registerSchema = yup.object().shape({
   firstName: yup.string().required("First name is required").min(2, "Too short").max(50, "Too long"),
@@ -85,7 +87,7 @@ const Form = () => {
   const isRegister = pageType === "register";
   
   // Auth0 integration
-  const { loginUser, isAuthenticated, isLoading: auth0Loading } = useAuth0Integration();
+  // Remove Auth0Integration - using standard Auth0 React SDK components instead
 
   // Check for signup URL parameter on component mount
   useEffect(() => {
@@ -182,6 +184,34 @@ const Form = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Google OAuth handlers
+  const handleGoogleSuccess = async (googleResponse) => {
+    try {
+      setIsLoading(true);
+      console.log('Google login success:', googleResponse);
+      
+      const result = await GoogleOAuthService.handleGoogleLoginSuccess(googleResponse);
+      
+      // Set user in Redux store
+      dispatch(setLogin({
+        user: result.user,
+        token: result.token
+      }));
+      
+      navigate('/');
+    } catch (error) {
+      console.error('Google login error:', error);
+      setSubmitError(error.message || 'Google login failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleError = (error) => {
+    console.error('Google login error:', error);
+    setSubmitError('Google login failed. Please try again.');
   };
 
   const handleFormSubmit = async (values, onSubmitProps) => {
@@ -449,30 +479,15 @@ const Form = () => {
                   </Typography>
                 </Divider>
                 
-                <Button
-                  fullWidth
-                  onClick={() => loginUser()}
-                  disabled={isLoading || auth0Loading}
-                  sx={{
-                    p: "1rem",
-                    backgroundColor: "#ea5a0c",
-                    color: "white",
-                    "&:hover": { 
-                      backgroundColor: "#d04e00",
-                    },
-                    "&:disabled": {
-                      backgroundColor: palette.neutral.light,
-                      color: palette.neutral.medium
-                    },
-                    mb: 2
-                  }}
-                >
-                  {auth0Loading ? (
-                    <CircularProgress size={24} sx={{ color: "white" }} />
-                  ) : (
-                    "Continue with Auth0"
-                  )}
-                </Button>
+                <Box display="flex" flexDirection="column" gap={2}>
+                  <GoogleLoginButton 
+                    onSuccess={handleGoogleSuccess}
+                    onError={handleGoogleError}
+                    disabled={isLoading}
+                  />
+                  
+                  <LoginButton />
+                </Box>
               </>
             )}
             

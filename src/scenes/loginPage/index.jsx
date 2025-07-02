@@ -1,3 +1,6 @@
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import { Auth0Provider } from '@auth0/auth0-react';
 import { Box, Typography, useTheme, useMediaQuery, Paper } from "@mui/material";
 import Form from "./Form";
 

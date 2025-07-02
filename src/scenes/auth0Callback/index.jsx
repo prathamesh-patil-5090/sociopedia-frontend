@@ -5,9 +5,10 @@ import { useDispatch } from 'react-redux';
 import { setLogin } from 'state';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import { useAuth0Integration } from '../../services/Auth0Service';
+import Auth0Service from '../../services/Auth0Service';
 
 const Auth0Callback = () => {
-  const { isAuthenticated, isLoading, user } = useAuth0();
+  const { isAuthenticated, isLoading, user, getAccessTokenSilently } = useAuth0();
   const { exchangeTokenAndLogin } = useAuth0Integration();
   const navigate = useNavigate();
   const dispatch = useDispatch();

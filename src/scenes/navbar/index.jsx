@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   IconButton,
@@ -24,10 +24,13 @@ import {
   Home,
 } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
-import { setMode, setLogout } from "state";
+import { setMode, setLogout, setLogin } from "state";
 import { useNavigate } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react";
 import FlexBetween from "components/FlexBetween";
 import UserImage from "components/UserImage";
+import LogoutButton from "components/LogoutButton";
+import Profile from "components/Profile";
 
 const AuthButtons = ({ theme, navigate, isMobile = false }) => {
   return (
@@ -75,13 +78,77 @@ const Navbar = () => {
   const user = useSelector((state) => state.user) || {};
   const isNonMobileScreens = useMediaQuery("(min-width: 1000px)");
   const isAuth = Boolean(useSelector((state) => state.token));
+  
+  // Auth0 integration
+  const { user: auth0User, isAuthenticated: isAuth0Authenticated, isLoading: auth0Loading, logout: auth0Logout } = useAuth0();
+
+  useEffect(() => {
+    const syncAuth0User = async () => {
+      // Only sync if Auth0 is authenticated and the Django session isn't yet established
+      // Also check if there's no token in localStorage to avoid re-sync after manual logout
+      if (isAuth0Authenticated && auth0User && !isAuth && localStorage.getItem('token') === null) {
+        try {
+          console.log('Auth0 user authenticated, syncing with Django backend...');
+          
+          const apiUrl = `${import.meta.env.VITE_API_URL}/auth/auth0/sync/`;
+          
+          const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ user: auth0User }),
+          });
+
+          const result = await response.json();
+
+          if (response.ok && result.user && result.tokens) {
+            // Store Django JWT tokens
+            localStorage.setItem('token', result.tokens.access);
+            localStorage.setItem('refreshToken', result.tokens.refresh);
+
+            // Set user in Redux store with Django user data
+            dispatch(setLogin({
+              user: result.user,
+              token: result.tokens.access
+            }));
+
+            console.log('Auth0 user successfully synced with Django.');
+          } else {
+            console.error('Auth0 user sync failed:', result);
+          }
+        } catch (error) {
+          console.error('Error syncing Auth0 user:', error);
+        }
+      }
+    };
+
+    syncAuth0User();
+  }, [isAuth0Authenticated, auth0User, isAuth, dispatch]);
 
   const theme = useTheme();
   const neutralLight = theme.palette.neutral.light;
   const background = theme.palette.background.default;
   const alt = theme.palette.background.alt;
 
-  const fullName = user ? `${user.firstName || ''} ${user.lastName || ''}` : '';
+  // Use Redux state as the primary source of truth
+  const fullName = user ? `${user.firstName} ${user.lastName}` : "";
+  const isUserAuthenticated = isAuth;
+
+  // Combined logout function
+  const handleLogout = () => {
+    // Clear local storage first
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+    
+    // Redux logout
+    dispatch(setLogout());
+    
+    // Auth0 logout (this will redirect, so no need to wait)
+    if (isAuth0Authenticated) {
+      auth0Logout({ logoutParams: { returnTo: window.location.origin } });
+    }
+  };
 
   return (
     <FlexBetween 
@@ -221,7 +288,7 @@ const Navbar = () => {
             </IconButton>
           </Tooltip>
 
-          {isAuth ? (
+          {isUserAuthenticated ? (
             <FlexBetween gap="1rem">
               {/* User Profile Section */}
               <Box display="flex" alignItems="center" gap="0.5rem">
@@ -261,7 +328,13 @@ const Navbar = () => {
                   >
                     <MenuItem 
                       value={fullName}
-                      onClick={() => navigate(`/profile/${user._id}`)}
+                      onClick={() => {
+                        if (auth0User) {
+                          navigate('/auth0-profile');
+                        } else {
+                          navigate(`/profile/${user._id}`);
+                        }
+                      }}
                       sx={{
                         "&:hover": {
                           backgroundColor: theme.palette.primary.main + "20",
@@ -275,7 +348,7 @@ const Navbar = () => {
                     </MenuItem>
                     <Divider />
                     <MenuItem 
-                      onClick={() => dispatch(setLogout())}
+                      onClick={handleLogout}
                       sx={{
                         color: theme.palette.error.main,
                         "&:hover": {
@@ -422,7 +495,7 @@ const Navbar = () => {
               </IconButton>
             </FlexBetween>
 
-            {isAuth ? (
+            {isUserAuthenticated ? (
               <Box display="flex" flexDirection="column" gap="2rem" alignItems="center" mt="1rem">
                 <Box 
                   display="flex" 
@@ -454,7 +527,7 @@ const Navbar = () => {
                   variant="outlined"
                   startIcon={<Logout />}
                   onClick={() => {
-                    dispatch(setLogout());
+                    handleLogout();
                     setIsMobileMenuToggled(false);
                   }}
                   sx={{

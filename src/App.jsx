@@ -6,8 +6,6 @@ import ForgotPassword from "scenes/loginPage/ForgotPassword";
 import Auth0Callback from "scenes/auth0Callback";
 import Auth0TestPage from "scenes/auth0Test";
 import Auth0ProfilePage from "scenes/auth0ProfilePage";
-import GoogleCallback from "scenes/googleCallback";
-import GoogleOAuthTest from "components/GoogleOAuthTest";
 import { useMemo, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { CssBaseline, ThemeProvider } from "@mui/material";
@@ -45,10 +43,8 @@ function App() {
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/callback" element={<Auth0Callback />} />
-                <Route path="/auth/google/callback" element={<GoogleCallback />} />
                 <Route path="/auth0-test" element={<Auth0TestPage />} />
                 <Route path="/auth0-profile" element={<Auth0ProfilePage />} />
-                <Route path="/google-test" element={<GoogleOAuthTest />} />
                 <Route
                   path="/profile/:userId"
                   element={<ProfilePage />}

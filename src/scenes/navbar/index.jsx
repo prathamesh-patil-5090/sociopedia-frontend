@@ -73,6 +73,7 @@ const AuthButtons = ({ theme, navigate, isMobile = false }) => {
 
 const Navbar = () => {
   const [isMobileMenuToggled, setIsMobileMenuToggled] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false); // Prevent re-sync on logout
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const user = useSelector((state) => state.user) || {};
@@ -84,9 +85,8 @@ const Navbar = () => {
 
   useEffect(() => {
     const syncAuth0User = async () => {
-      // Only sync if Auth0 is authenticated and the Django session isn't yet established
-      // Also check if there's no token in localStorage to avoid re-sync after manual logout
-      if (isAuth0Authenticated && auth0User && !isAuth && localStorage.getItem('token') === null) {
+      // Only sync if Auth0 is authenticated, not logging out, and the Django session isn't yet established
+      if (isAuth0Authenticated && auth0User && !isAuth && !isLoggingOut) {
         try {
           console.log('Auth0 user authenticated, syncing with Django backend...');
           
@@ -124,7 +124,7 @@ const Navbar = () => {
     };
 
     syncAuth0User();
-  }, [isAuth0Authenticated, auth0User, isAuth, dispatch]);
+  }, [isAuth0Authenticated, auth0User, isAuth, isLoggingOut, dispatch]);
 
   const theme = useTheme();
   const neutralLight = theme.palette.neutral.light;
@@ -137,6 +137,8 @@ const Navbar = () => {
 
   // Combined logout function
   const handleLogout = () => {
+    setIsLoggingOut(true); // Prevent the sync effect from running
+
     // Clear local storage first
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');

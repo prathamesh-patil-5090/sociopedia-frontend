@@ -21,8 +21,6 @@ import FlexBetween from "components/FlexBetween";
 import RegisterService from "../../services/RegisterService";
 import LoginService from "../../services/LoginService";
 import LoginButton from "../../components/LoginButton";
-import GoogleLoginButton from "../../components/GoogleLoginButton";
-import GoogleOAuthService from "../../services/GoogleOAuthService";
 
 const registerSchema = yup.object().shape({
   firstName: yup.string().required("First name is required").min(2, "Too short").max(50, "Too long"),
@@ -184,34 +182,6 @@ const Form = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Google OAuth handlers
-  const handleGoogleSuccess = async (googleResponse) => {
-    try {
-      setIsLoading(true);
-      console.log('Google login success:', googleResponse);
-      
-      const result = await GoogleOAuthService.handleGoogleLoginSuccess(googleResponse);
-      
-      // Set user in Redux store
-      dispatch(setLogin({
-        user: result.user,
-        token: result.token
-      }));
-      
-      navigate('/');
-    } catch (error) {
-      console.error('Google login error:', error);
-      setSubmitError(error.message || 'Google login failed');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleGoogleError = (error) => {
-    console.error('Google login error:', error);
-    setSubmitError('Google login failed. Please try again.');
   };
 
   const handleFormSubmit = async (values, onSubmitProps) => {
@@ -480,12 +450,6 @@ const Form = () => {
                 </Divider>
                 
                 <Box display="flex" flexDirection="column" gap={2}>
-                  <GoogleLoginButton 
-                    onSuccess={handleGoogleSuccess}
-                    onError={handleGoogleError}
-                    disabled={isLoading}
-                  />
-                  
                   <LoginButton />
                 </Box>
               </>

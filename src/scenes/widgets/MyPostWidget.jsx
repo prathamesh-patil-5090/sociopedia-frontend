@@ -210,25 +210,18 @@ const MyPostWidget = ({ picturePath }) => {
         <Button
           disabled={!post}
           onClick={handlePost}
+          className={`
+            ${!post 
+              ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
+              : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 hover:-translate-y-0.5 hover:shadow-lg'
+            } 
+            rounded-full font-bold px-8 py-2 transition-all duration-300 transform 
+            ${post ? 'hover:scale-105' : ''}
+          `}
           sx={{
-            color: !post ? palette.neutral.medium : palette.background.alt,
-            backgroundColor: !post 
-              ? palette.background.light
-              : palette.primary.main,
-            borderRadius: "3rem",
-            fontWeight: "bold",
-            padding: "0.5rem 2rem",
-            transition: "all 0.3s",
-            "&:hover": { 
-              backgroundColor: !post 
-                ? palette.background.light
-                : palette.primary.dark,
-              color: !post 
-                ? palette.neutral.medium
-                : palette.background.alt,
-              transform: post ? "translateY(-2px)" : "none",
-              boxShadow: post ? "0 2px 10px rgba(0,0,0,0.2)" : "none",
-            },
+            textTransform: 'none',
+            minWidth: 'auto',
+            color: post ? (palette.mode === 'dark' ? 'white' : 'black') : undefined,
           }}
         >
           POST

@@ -15,6 +15,8 @@ const PostsWidget = ({ userId, isProfile = false, isAuth = false }) => {
   const [pagination, setPagination] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [allLoadedPosts, setAllLoadedPosts] = useState([]); // Store all posts locally
+  const [loadedPages, setLoadedPages] = useState(new Set()); // Track loaded pages
   const observer = useRef();
 
   const getPosts = async (page = 1, reset = false) => {
@@ -30,12 +32,24 @@ const PostsWidget = ({ userId, isProfile = false, isAuth = false }) => {
       const { posts: newPosts, pagination: paginationInfo } = response;
 
       if (reset || page === 1) {
+        // Reset: Start fresh with page 1
+        setAllLoadedPosts(newPosts);
+        setLoadedPages(new Set([1]));
         dispatch(setPosts({ posts: newPosts }));
       } else {
-        // Append new posts to existing ones
-        const currentPosts = Array.isArray(posts) ? posts : [];
-        const updatedPosts = [...currentPosts, ...newPosts];
-        dispatch(setPosts({ posts: updatedPosts }));
+        // Infinite scroll: Add new posts to the existing collection
+        setAllLoadedPosts(prevPosts => {
+          // Avoid duplicates by checking if posts already exist
+          const existingIds = new Set(prevPosts.map(post => post._id));
+          const uniqueNewPosts = newPosts.filter(post => !existingIds.has(post._id));
+          const updatedPosts = [...prevPosts, ...uniqueNewPosts];
+          
+          // Update Redux store with all posts
+          dispatch(setPosts({ posts: updatedPosts }));
+          return updatedPosts;
+        });
+        
+        setLoadedPages(prev => new Set([...prev, page]));
       }
 
       setPagination(paginationInfo);
@@ -45,6 +59,8 @@ const PostsWidget = ({ userId, isProfile = false, isAuth = false }) => {
       console.error("Error fetching posts:", error);
       setError("Failed to load posts. Please try again.");
       if (reset || page === 1) {
+        setAllLoadedPosts([]);
+        setLoadedPages(new Set());
         dispatch(setPosts({ posts: [] }));
       }
     } finally {
@@ -68,12 +84,24 @@ const PostsWidget = ({ userId, isProfile = false, isAuth = false }) => {
       const { posts: newPosts, pagination: paginationInfo } = response;
 
       if (reset || page === 1) {
+        // Reset: Start fresh with page 1
+        setAllLoadedPosts(newPosts);
+        setLoadedPages(new Set([1]));
         dispatch(setPosts({ posts: newPosts }));
       } else {
-        // Append new posts to existing ones
-        const currentPosts = Array.isArray(posts) ? posts : [];
-        const updatedPosts = [...currentPosts, ...newPosts];
-        dispatch(setPosts({ posts: updatedPosts }));
+        // Infinite scroll: Add new posts to the existing collection
+        setAllLoadedPosts(prevPosts => {
+          // Avoid duplicates by checking if posts already exist
+          const existingIds = new Set(prevPosts.map(post => post._id));
+          const uniqueNewPosts = newPosts.filter(post => !existingIds.has(post._id));
+          const updatedPosts = [...prevPosts, ...uniqueNewPosts];
+          
+          // Update Redux store with all posts
+          dispatch(setPosts({ posts: updatedPosts }));
+          return updatedPosts;
+        });
+        
+        setLoadedPages(prev => new Set([...prev, page]));
       }
 
       setPagination(paginationInfo);
@@ -83,6 +111,8 @@ const PostsWidget = ({ userId, isProfile = false, isAuth = false }) => {
       console.error("Error fetching user posts:", error);
       setError("Failed to load user posts. Please try again.");
       if (reset || page === 1) {
+        setAllLoadedPosts([]);
+        setLoadedPages(new Set());
         dispatch(setPosts({ posts: [] }));
       }
     } finally {
@@ -121,6 +151,8 @@ const PostsWidget = ({ userId, isProfile = false, isAuth = false }) => {
     setCurrentPage(1);
     setHasMore(true);
     setPagination(null);
+    setAllLoadedPosts([]);
+    setLoadedPages(new Set());
     
     if (isProfile) {
       getUserPosts(1, true);
@@ -159,6 +191,7 @@ const PostsWidget = ({ userId, isProfile = false, isAuth = false }) => {
 
   return (
     <Box>
+
       {posts.map((post, index) => {
         if (!post?._id) return null;
 
@@ -203,14 +236,8 @@ const PostsWidget = ({ userId, isProfile = false, isAuth = false }) => {
       {loadingMore && (
         <Box display="flex" justifyContent="center" p={2}>
           <CircularProgress size={30} />
-        </Box>
-      )}
-      
-      {/* End of posts indicator */}
-      {!hasMore && posts.length > 0 && (
-        <Box textAlign="center" p={2}>
-          <Typography variant="body2" color="textSecondary">
-            No more posts to load
+          <Typography variant="body2" color="textSecondary" ml={1}>
+            Loading more posts...
           </Typography>
         </Box>
       )}

@@ -47,6 +47,7 @@ import FlexBetween from "components/FlexBetween";
 import UserImage from "components/UserImage";
 import LogoutButton from "components/LogoutButton";
 import Profile from "components/Profile";
+import useWebSocket from "../../hooks/useWebSocket";
 
 const AuthButtons = ({ theme, navigate, isMobile = false }) => {
   return (
@@ -106,6 +107,36 @@ const Navbar = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
 
+  // WebSocket connection for real-time notifications
+  const handleNewNotification = (notification) => {
+    setNotifications(prev => [notification, ...prev]);
+    if (!notification.is_read) {
+      setUnreadCount(prev => prev + 1);
+    }
+  };
+
+  const handleFriendRequestInvalid = (notificationId, message) => {
+    // Update the notification to show it's invalid
+    setNotifications(prev => 
+      prev.map(notif => 
+        notif.id === notificationId 
+          ? { ...notif, is_invalid: true, invalid_message: message }
+          : notif
+      )
+    );
+    
+    // Decrease unread count if it was unread
+    setNotifications(prev => {
+      const notification = prev.find(n => n.id === notificationId);
+      if (notification && !notification.is_read) {
+        setUnreadCount(prevCount => Math.max(0, prevCount - 1));
+      }
+      return prev;
+    });
+  };
+
+  const { markAsRead } = useWebSocket(user?._id, handleNewNotification, handleFriendRequestInvalid);
+
   const fetchNotifications = async () => {
     if (!token) return;
     try {
@@ -123,9 +154,9 @@ const Navbar = () => {
   };
 
   useEffect(() => {
+    // Initial fetch of notifications
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30000); // Poll every 30 seconds
-    return () => clearInterval(interval);
+    // Remove polling since we now use WebSocket
   }, [token]);
 
   const handleNotificationClick = (event) => {
@@ -142,11 +173,24 @@ const Navbar = () => {
 
   const handleMarkAsRead = async (notificationId) => {
     try {
+      // Send WebSocket message to mark as read
+      markAsRead(notificationId);
+      
+      // Also call the API endpoint
       await fetch(`${import.meta.env.VITE_API_URL}/notifications/${notificationId}/read/`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
-      fetchNotifications(); // Refresh notifications
+      
+      // Update local state
+      setNotifications(prev => 
+        prev.map(notif => 
+          notif.id === notificationId 
+            ? { ...notif, is_read: true }
+            : notif
+        )
+      );
+      setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
       console.error("Failed to mark notification as read:", error);
     }
@@ -189,12 +233,30 @@ const Navbar = () => {
           // Friend request already processed, just refresh notifications
           console.log('Friend request already processed:', errorData.message);
           fetchNotifications();
+        } else if (response.status === 404 && errorData.error === 'Friend request not found or already deleted') {
+          // Friend request was deleted/cancelled, mark as invalid
+          setNotifications(prev => 
+            prev.map(notif => 
+              notif.friend_request?.id === requestId || notif.friend_request === requestId
+                ? { ...notif, is_invalid: true, invalid_message: 'Friend request is no longer available' }
+                : notif
+            )
+          );
+          console.log('Friend request not found or already deleted');
         } else {
           console.error("Failed to respond to friend request:", errorData);
         }
       }
     } catch (error) {
       console.error("Failed to respond to friend request:", error);
+      // If there's a network error or the request fails, mark as invalid
+      setNotifications(prev => 
+        prev.map(notif => 
+          notif.friend_request?.id === requestId || notif.friend_request === requestId
+            ? { ...notif, is_invalid: true, invalid_message: 'Friend request is no longer available' }
+            : notif
+        )
+      );
     }
   };
 
@@ -820,10 +882,20 @@ const Navbar = () => {
           <List>
             {notifications.length > 0 ? (
               notifications.map((notif) => (
-                <ListItem key={notif.id} divider sx={{ backgroundColor: notif.is_read ? 'transparent' : theme.palette.action.hover }}>
-                  <ListItemText primary={notif.message} secondary={new Date(notif.timestamp).toLocaleString()} />
+                <ListItem key={notif.id} divider sx={{ 
+                  backgroundColor: notif.is_read ? 'transparent' : theme.palette.action.hover,
+                  opacity: notif.is_invalid ? 0.6 : 1
+                }}>
+                  <ListItemText 
+                    primary={notif.is_invalid ? `${notif.invalid_message || 'Request no longer available'}` : notif.message}
+                    secondary={new Date(notif.created_at).toLocaleString()}
+                    primaryTypographyProps={{
+                      color: notif.is_invalid ? theme.palette.error.main : 'inherit',
+                      fontStyle: notif.is_invalid ? 'italic' : 'normal'
+                    }}
+                  />
                   <ListItemSecondaryAction>
-                    {notif.type === 'friend_request' && !notif.is_read && (
+                    {notif.type === 'friend_request' && !notif.is_read && !notif.is_invalid && (
                       <Box>
                         <Tooltip title="Accept">
                           <IconButton edge="end" aria-label="accept" onClick={() => handleFriendRequestResponse(notif.friend_request?.id || notif.friend_request, 'accept')}>
@@ -836,6 +908,11 @@ const Navbar = () => {
                           </IconButton>
                         </Tooltip>
                       </Box>
+                    )}
+                    {notif.is_invalid && (
+                      <Typography variant="caption" color="error" sx={{ mr: 1 }}>
+                        Failed
+                      </Typography>
                     )}
                     {!notif.is_read && notif.type !== 'friend_request' && (
                       <Tooltip title="Mark as read">

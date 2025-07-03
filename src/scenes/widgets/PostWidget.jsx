@@ -43,6 +43,7 @@ const PostWidget = ({
   const [imageError, setImageError] = useState("");
   const [shareAnchorEl, setShareAnchorEl] = useState(null);
   const [showCopySuccess, setShowCopySuccess] = useState(false);
+  const [isLiking, setIsLiking] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [authModalAction, setAuthModalAction] = useState('like');
@@ -101,6 +102,9 @@ const PostWidget = ({
   }, [postUserId]);
 
   const patchLike = async () => {
+    // Prevent rapid clicking
+    if (isLiking) return;
+    
     // Check if user is authenticated
     if (!token || !loggedInUserId) {
       setAuthModalAction('like');
@@ -108,6 +112,7 @@ const PostWidget = ({
       return;
     }
 
+    setIsLiking(true);
     try {
       const result = await PostsService.likePost(postId, loggedInUserId, token);
       
@@ -133,6 +138,9 @@ const PostWidget = ({
       }
     } catch (error) {
       console.error("Failed to like post:", error);
+    } finally {
+      // Add a small delay before allowing another like
+      setTimeout(() => setIsLiking(false), 500);
     }
   };
 
@@ -568,8 +576,10 @@ const PostWidget = ({
           <FlexBetween gap="0.3rem">
             <IconButton 
               onClick={patchLike} 
+              disabled={isLiking || (!props.isAuth || isDummyUser)}
               sx={{ 
                 color: (!props.isAuth || isDummyUser) ? "gray" : "inherit",
+                opacity: isLiking ? 0.6 : 1,
                 cursor: "pointer",
                 padding: "0.5rem",
                 borderRadius: "50%",

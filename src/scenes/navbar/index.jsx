@@ -109,9 +109,16 @@ const Navbar = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [anchorEl, setAnchorEl] = useState(null);
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
+  const [notificationIds, setNotificationIds] = useState(new Set()); // Track notification IDs to prevent duplicates
 
   // WebSocket connection for real-time notifications
   const handleNewNotification = (notification) => {
+    // Prevent duplicate notifications
+    if (notificationIds.has(notification.id)) {
+      return;
+    }
+    
+    setNotificationIds(prev => new Set([...prev, notification.id]));
     setNotifications(prev => [notification, ...prev]);
     if (!notification.is_read) {
       setUnreadCount(prev => prev + 1);
@@ -150,6 +157,8 @@ const Navbar = () => {
         const data = await response.json();
         setNotifications(data.notifications);
         setUnreadCount(data.unread_count);
+        // Populate the notification IDs set
+        setNotificationIds(new Set(data.notifications.map(n => n.id)));
       }
     } catch (error) {
       console.error("Failed to fetch notifications:", error);
@@ -277,6 +286,7 @@ const Navbar = () => {
       if (response.ok) {
         setNotifications([]);
         setUnreadCount(0);
+        setNotificationIds(new Set()); // Clear the IDs set
         setClearDialogOpen(false);
         console.log("All notifications cleared successfully");
       } else {
@@ -884,8 +894,8 @@ const Navbar = () => {
           </FlexBetween>
           <List>
             {notifications.length > 0 ? (
-              notifications.map((notif) => (
-                <ListItem key={notif.id} divider sx={{ 
+              notifications.map((notif, index) => (
+                <ListItem key={`${notif.id}-${index}`} divider sx={{ 
                   backgroundColor: notif.is_read ? 'transparent' : theme.palette.action.hover,
                   opacity: notif.is_invalid ? 0.6 : 1
                 }}>

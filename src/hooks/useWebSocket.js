@@ -21,6 +21,12 @@ const useWebSocket = (userId, onNotification, onFriendRequestInvalid) => {
 
   const connect = useCallback(() => {
     if (!userId || !token) return;
+    
+    // Prevent multiple connections
+    if (ws.current && (ws.current.readyState === WebSocket.CONNECTING || ws.current.readyState === WebSocket.OPEN)) {
+      console.log('WebSocket already connected or connecting, skipping...');
+      return;
+    }
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     // Remove /api from the URL and any trailing slashes for WebSocket connection
@@ -46,11 +52,11 @@ const useWebSocket = (userId, onNotification, onFriendRequestInvalid) => {
         
         if (data.type === 'notification' && onNotificationRef.current) {
           onNotificationRef.current(data.notification);
-        } else if (data.type === 'unread_notifications' && onNotificationRef.current) {
-          // Handle initial unread notifications
-          data.notifications.forEach(notification => {
-            onNotificationRef.current(notification);
-          });
+        } else if (data.type === 'unread_notifications') {
+          // Handle initial unread notifications - these are existing notifications, not new ones
+          // We should not add them as new notifications to prevent duplicates
+          // The initial fetch via REST API already handles getting all notifications
+          console.log('Received unread notifications batch, skipping to prevent duplicates');
         } else if (data.type === 'friend_request_invalid' && onFriendRequestInvalidRef.current) {
           onFriendRequestInvalidRef.current(data.notification_id, data.message);
         }

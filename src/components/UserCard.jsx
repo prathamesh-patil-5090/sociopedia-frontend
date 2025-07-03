@@ -38,7 +38,7 @@ const UserCard = ({ user, showAddFriend = false }) => {
             },
           }}
         >
-          <UserImage image={user.picturePath} size="50px" />
+          <UserImage image={user.picture_path || user.picturePath} size="50px" />
           <Box>
             <Typography
               variant="h6"

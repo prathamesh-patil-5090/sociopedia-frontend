@@ -192,7 +192,7 @@ const SearchPage = () => {
                       description={post.description}
                       location={post.location}
                       picturePath={post.picturePath}
-                      userPicturePath={post.userPicturePath}
+                      userPicturePath={post.user?.picture_path || post.userPicturePath}
                       likes={post.likes}
                       comments={post.comments}
                     />

@@ -152,7 +152,7 @@ const PostWidget = ({
         userId: loggedInUserId,
         firstName: loggedInUser.firstName,
         lastName: loggedInUser.lastName,
-        userPicturePath: loggedInUser.picturePath,
+        userPicturePath: loggedInUser.picture_path || loggedInUser.picturePath,
         comment: comment.trim(),
         createdAt: new Date().toISOString()
       };

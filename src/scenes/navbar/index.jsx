@@ -99,6 +99,9 @@ const Navbar = () => {
   const isNonMobileScreens = useMediaQuery("(min-width: 1000px)");
   const isAuth = Boolean(useSelector((state) => state.token));
   
+  // Get the correct profile picture (Auth0 or regular)
+  const userProfilePicture = user.picture_path || user.picturePath;
+  
   // Auth0 integration
   const { user: auth0User, isAuthenticated: isAuth0Authenticated, isLoading: auth0Loading, logout: auth0Logout } = useAuth0();
 
@@ -544,7 +547,7 @@ const Navbar = () => {
                     transition: "transform 0.2s ease",
                   }}
                 >
-                  <UserImage image={user?.picturePath} size="35px" />
+                  <UserImage image={userProfilePicture} size="35px" />
                 </Box>
                 <FormControl variant="standard" value={fullName}>
                   <Select
@@ -792,7 +795,7 @@ const Navbar = () => {
                     transition: "all 0.2s ease",
                   }}
                 >
-                  <UserImage image={user?.picturePath} size="60px" />
+                  <UserImage image={userProfilePicture} size="60px" />
                   <Typography variant="h6" fontWeight="500" textAlign="center">
                     {fullName}
                   </Typography>

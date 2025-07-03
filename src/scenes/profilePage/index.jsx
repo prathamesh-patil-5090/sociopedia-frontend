@@ -52,7 +52,7 @@ const ProfilePage = () => {
         <Box flexBasis={isNonMobileScreens ? "26%" : undefined}>
           <UserWidget 
             userId={userId} 
-            picturePath={user.picturePath || null}
+            picturePath={user.picture_path || user.picturePath || null}
             isProfilePage={true}
           />
           <Box m="2rem 0" />
@@ -70,7 +70,7 @@ const ProfilePage = () => {
         >
           {/* Only show MyPostWidget if it's the user's own profile and they're authenticated */}
           {isOwnProfile && isAuth && (
-            <MyPostWidget picturePath={user.picturePath || null} />
+            <MyPostWidget picturePath={user.picture_path || user.picturePath || null} />
           )}
           <Box m="2rem 0" />
           <PostsWidget 

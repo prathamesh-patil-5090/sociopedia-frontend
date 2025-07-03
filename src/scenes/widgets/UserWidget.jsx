@@ -47,7 +47,11 @@ const UserWidget = ({ userId, picturePath, isProfilePage = false }) => {
     impressions,
     friends,
     picturePath: userPicturePath,
+    picture_path: auth0PicturePath, // Auth0 profile picture
   } = user;
+
+  // Use Auth0 picture if available, otherwise fallback to regular picturePath
+  const displayPicture = auth0PicturePath || userPicturePath || picturePath;
 
   return (
     <WidgetWrapper>
@@ -70,7 +74,7 @@ const UserWidget = ({ userId, picturePath, isProfilePage = false }) => {
       >
         <FlexBetween gap="1rem">
           <Box sx={{ position: "relative" }}>
-            <UserImage image={userPicturePath || picturePath} size="60px" />
+            <UserImage image={displayPicture} size="60px" />
             {/* Online status indicator */}
             <Box
               sx={{

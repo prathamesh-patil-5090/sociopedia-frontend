@@ -260,6 +260,11 @@ class PostsService {
       return null;
     }
 
+    // Check if it's already a full URL (Auth0 profile pictures, etc.)
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+
     // Remove leading slash if present
     let cleanPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath;
     

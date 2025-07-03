@@ -62,7 +62,7 @@ const CommentCard = ({
     <Box p="1rem">
       <FlexBetween>
         <FlexBetween gap="1rem">
-          <UserImage image={comment.user?.picturePath || comment.userPicturePath} size="45px" />
+          <UserImage image={comment.user?.picture_path || comment.user?.picturePath || comment.userPicturePath} size="45px" />
           <Box>
             <Typography variant="h6">
               {comment.user?.firstName || comment.firstName} {comment.user?.lastName || comment.lastName}

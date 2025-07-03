@@ -11,6 +11,9 @@ const HomePage = () => {
   const isAuth = Boolean(useSelector((state) => state.token));
   const user = useSelector((state) => state.user) || {};
   const { _id, picturePath } = user;
+  
+  // Use Auth0 profile picture if available, otherwise fallback to regular picturePath
+  const displayPicture = user.picture_path || picturePath;
 
   return (
     <Box display="flex" flexDirection="column" minHeight="100vh">
@@ -37,7 +40,7 @@ const HomePage = () => {
               overflowY: "auto",
             }}
           >
-            <UserWidget userId={_id} picturePath={picturePath} />
+            <UserWidget userId={_id} picturePath={displayPicture} />
           </Box>
         )}
 
@@ -79,12 +82,12 @@ const HomePage = () => {
           {/* Mobile UserWidget (only for authenticated users) */}
           {isAuth && !isNonMobileScreens && (
             <Box mb="2rem">
-              <UserWidget userId={_id} picturePath={picturePath} />
+              <UserWidget userId={_id} picturePath={displayPicture} />
             </Box>
           )}
           
           {/* MyPostWidget (only for authenticated users) */}
-          {isAuth && <MyPostWidget picturePath={picturePath} />}
+          {isAuth && <MyPostWidget picturePath={displayPicture} />}
           
           {/* Posts are shown to everyone */}
           <PostsWidget userId={_id} isAuth={isAuth} />

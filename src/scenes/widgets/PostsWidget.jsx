@@ -206,7 +206,21 @@ const PostsWidget = ({ userId, isProfile = false, isAuth = false }) => {
           userPicturePath,
           likes,
           comments,
+          user, // Get the nested user object
         } = post;
+
+        // Use Auth0 profile picture if available, otherwise fallback to userPicturePath
+        // Check multiple possible sources for the profile picture
+        const displayUserPicture = user?.picture_path || user?.picturePath || userPicturePath;
+        
+        // Debug logging (remove in production)
+        if (user?.picture_path) {
+          console.log(`Post ${_id}: Using Auth0 picture_path: ${user.picture_path}`);
+        } else if (user?.picturePath) {
+          console.log(`Post ${_id}: Using user.picturePath: ${user.picturePath}`);
+        } else {
+          console.log(`Post ${_id}: Using userPicturePath: ${userPicturePath}`);
+        }
 
         const isLastPost = index === posts.length - 1;
 
@@ -222,7 +236,7 @@ const PostsWidget = ({ userId, isProfile = false, isAuth = false }) => {
               description={description || ""}
               location={location || ""}
               picturePath={picturePath}
-              userPicturePath={userPicturePath}
+              userPicturePath={displayUserPicture}
               likes={likes || {}}
               comments={comments || []}
               isAuth={isAuth}

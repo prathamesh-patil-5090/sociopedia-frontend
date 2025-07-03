@@ -12,6 +12,17 @@ import {
   Button,
   Tooltip,
   Divider,
+  Badge,
+  Popover,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
 } from "@mui/material";
 import {
   Search,
@@ -22,9 +33,14 @@ import {
   Person,
   Logout,
   Home,
+  Notifications,
+  NotificationsNone,
+  Check, // For accept
+  Clear, // For decline
+  DeleteSweep, // For clear all notifications
 } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
-import { setMode, setLogout, setLogin } from "state";
+import { setMode, setLogout, setLogin, setFriends } from "state";
 import { useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 import FlexBetween from "components/FlexBetween";
@@ -74,14 +90,146 @@ const AuthButtons = ({ theme, navigate, isMobile = false }) => {
 const Navbar = () => {
   const [isMobileMenuToggled, setIsMobileMenuToggled] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false); // Prevent re-sync on logout
+  const [searchQuery, setSearchQuery] = useState(""); // Add search state
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const user = useSelector((state) => state.user) || {};
+  const token = useSelector((state) => state.token);
   const isNonMobileScreens = useMediaQuery("(min-width: 1000px)");
   const isAuth = Boolean(useSelector((state) => state.token));
   
   // Auth0 integration
   const { user: auth0User, isAuthenticated: isAuth0Authenticated, isLoading: auth0Loading, logout: auth0Logout } = useAuth0();
+
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [clearDialogOpen, setClearDialogOpen] = useState(false);
+
+  const fetchNotifications = async () => {
+    if (!token) return;
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/notifications/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setNotifications(data.notifications);
+        setUnreadCount(data.unread_count);
+      }
+    } catch (error) {
+      console.error("Failed to fetch notifications:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30000); // Poll every 30 seconds
+    return () => clearInterval(interval);
+  }, [token]);
+
+  const handleNotificationClick = (event) => {
+    setAnchorEl(event.currentTarget);
+    if (unreadCount > 0) {
+      // Optimistically set to 0, or refetch
+      setUnreadCount(0);
+    }
+  };
+
+  const handleNotificationClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleMarkAsRead = async (notificationId) => {
+    try {
+      await fetch(`${import.meta.env.VITE_API_URL}/notifications/${notificationId}/read/`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      fetchNotifications(); // Refresh notifications
+    } catch (error) {
+      console.error("Failed to mark notification as read:", error);
+    }
+  };
+
+  const handleFriendRequestResponse = async (requestId, action) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/friend-request/respond/${requestId}/`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ action }),
+      });
+      
+      if (response.ok) {
+        fetchNotifications(); // Refresh notifications after responding
+        
+        // If friend request was accepted, update Redux store with new friends list
+        if (action === 'accept') {
+          try {
+            const friendsResponse = await fetch(`${import.meta.env.VITE_API_URL}/users/${user._id}/friends/`, {
+              method: "GET",
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            
+            if (friendsResponse.ok) {
+              const friendsData = await friendsResponse.json();
+              dispatch(setFriends({ friends: friendsData }));
+              console.log("Updated friends list after accepting request:", friendsData);
+            }
+          } catch (error) {
+            console.error("Failed to update friends list after accepting request:", error);
+          }
+        }
+      } else {
+        const errorData = await response.json();
+        if (response.status === 400 && errorData.error === 'Friend request already processed') {
+          // Friend request already processed, just refresh notifications
+          console.log('Friend request already processed:', errorData.message);
+          fetchNotifications();
+        } else {
+          console.error("Failed to respond to friend request:", errorData);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to respond to friend request:", error);
+    }
+  };
+
+  const handleClearAllNotifications = () => {
+    setClearDialogOpen(true);
+  };
+
+  const handleConfirmClearAll = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/notifications/clear/`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      if (response.ok) {
+        setNotifications([]);
+        setUnreadCount(0);
+        setClearDialogOpen(false);
+        console.log("All notifications cleared successfully");
+      } else {
+        console.error("Failed to clear notifications");
+        setClearDialogOpen(false);
+      }
+    } catch (error) {
+      console.error("Failed to clear all notifications:", error);
+      setClearDialogOpen(false);
+    }
+  };
+
+  const handleCancelClearAll = () => {
+    setClearDialogOpen(false);
+  };
+
+  const open = Boolean(anchorEl);
+  const id = open ? 'notifications-popover' : undefined;
 
   useEffect(() => {
     const syncAuth0User = async () => {
@@ -128,6 +276,7 @@ const Navbar = () => {
 
   const theme = useTheme();
   const neutralLight = theme.palette.neutral.light;
+  const dark = theme.palette.neutral.dark;
   const background = theme.palette.background.default;
   const alt = theme.palette.background.alt;
 
@@ -149,6 +298,26 @@ const Navbar = () => {
     // Auth0 logout (this will redirect, so no need to wait)
     if (isAuth0Authenticated) {
       auth0Logout({ logoutParams: { returnTo: window.location.origin } });
+    }
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      // Navigate to search results page with query
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery(""); // Clear search after navigation
+      setIsMobileMenuToggled(false); // Close mobile menu if open
+    }
+  };
+
+  const handleSearchInputChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleSearchKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch(e);
     }
   };
 
@@ -226,44 +395,54 @@ const Navbar = () => {
           </Typography>
         </Box>
         {isNonMobileScreens && (
-          <FlexBetween
-            backgroundColor={neutralLight}
-            borderRadius="25px"
-            gap="1rem"
-            padding="0.5rem 1.5rem"
-            sx={{
-              border: `1px solid ${theme.palette.divider}`,
-              "&:hover": {
-                borderColor: theme.palette.primary.main,
-                boxShadow: `0 0 0 2px ${theme.palette.primary.main}20`,
-              },
-              transition: "all 0.2s ease",
-              minWidth: "250px",
-            }}
+          <Box
+            component="form"
+            onSubmit={handleSearch}
+            sx={{ display: "flex", alignItems: "center" }}
           >
-            <InputBase 
-              placeholder="Search posts, people..." 
+            <FlexBetween
+              backgroundColor={neutralLight}
+              borderRadius="25px"
+              gap="1rem"
+              padding="0.5rem 1.5rem"
               sx={{
-                flex: 1,
-                "& input::placeholder": {
-                  color: theme.palette.neutral.medium,
-                  opacity: 0.8,
-                },
-              }}
-            />
-            <IconButton
-              sx={{
-                padding: "0.3rem",
-                color: theme.palette.neutral.medium,
+                border: `1px solid ${theme.palette.divider}`,
                 "&:hover": {
-                  color: theme.palette.primary.main,
-                  backgroundColor: theme.palette.primary.main + "20",
+                  borderColor: theme.palette.primary.main,
+                  boxShadow: `0 0 0 2px ${theme.palette.primary.main}20`,
                 },
+                transition: "all 0.2s ease",
+                minWidth: "250px",
               }}
             >
-              <Search />
-            </IconButton>
-          </FlexBetween>
+              <InputBase 
+                placeholder="Search posts, people..." 
+                value={searchQuery}
+                onChange={handleSearchInputChange}
+                onKeyPress={handleSearchKeyPress}
+                sx={{
+                  flex: 1,
+                  "& input::placeholder": {
+                    color: theme.palette.neutral.medium,
+                    opacity: 0.8,
+                  },
+                }}
+              />
+              <IconButton
+                type="submit"
+                sx={{
+                  padding: "0.3rem",
+                  color: theme.palette.neutral.medium,
+                  "&:hover": {
+                    color: theme.palette.primary.main,
+                    backgroundColor: theme.palette.primary.main + "20",
+                  },
+                }}
+              >
+                <Search />
+              </IconButton>
+            </FlexBetween>
+          </Box>
         )}
       </FlexBetween>
 
@@ -271,22 +450,21 @@ const Navbar = () => {
       {isNonMobileScreens ? (
         <FlexBetween gap="1.5rem">
           {/* Theme Toggle */}
-          <Tooltip title={`Switch to ${theme.palette.mode === "dark" ? "light" : "dark"} mode`}>
-            <IconButton
-              onClick={() => dispatch(setMode())}
-              sx={{
-                backgroundColor: theme.palette.neutral.light,
-                color: theme.palette.neutral.dark,
-                padding: "0.5rem",
-                "&:hover": {
-                  backgroundColor: theme.palette.primary.main,
-                  color: theme.palette.background.alt,
-                  transform: "rotate(180deg)",
-                },
-                transition: "all 0.3s ease",
-              }}
-            >
-              {theme.palette.mode === "dark" ? <LightMode /> : <DarkMode />}
+          <Tooltip title={theme.palette.mode === "dark" ? "Light Mode" : "Dark Mode"}>
+            <IconButton onClick={() => dispatch(setMode())}>
+              {theme.palette.mode === "dark" ? (
+                <DarkMode sx={{ fontSize: "25px" }} />
+              ) : (
+                <LightMode sx={{ color: dark, fontSize: "25px" }} />
+              )}
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip title="Notifications">
+            <IconButton onClick={handleNotificationClick}>
+              <Badge badgeContent={unreadCount} color="error">
+                <Notifications sx={{ fontSize: "25px" }} />
+              </Badge>
             </IconButton>
           </Tooltip>
 
@@ -390,6 +568,29 @@ const Navbar = () => {
           >
             {theme.palette.mode === "dark" ? <LightMode sx={{ fontSize: "20px" }} /> : <DarkMode sx={{ fontSize: "20px" }} />}
           </IconButton>
+          
+          {/* Notification Bell for Mobile - Always visible */}
+          {isUserAuthenticated && (
+            <IconButton
+              onClick={handleNotificationClick}
+              sx={{
+                backgroundColor: theme.palette.neutral.light,
+                color: theme.palette.neutral.dark,
+                padding: "0.6rem",
+                minWidth: "44px",
+                minHeight: "44px",
+                "&:hover": {
+                  backgroundColor: theme.palette.primary.main,
+                  color: theme.palette.background.alt,
+                },
+              }}
+            >
+              <Badge badgeContent={unreadCount} color="error">
+                <Notifications sx={{ fontSize: "20px" }} />
+              </Badge>
+            </IconButton>
+          )}
+          
           <IconButton
             onClick={() => setIsMobileMenuToggled(!isMobileMenuToggled)}
             sx={{
@@ -462,40 +663,50 @@ const Navbar = () => {
             height="calc(100vh - 100px)"
           >
             {/* Search Bar for Mobile */}
-            <FlexBetween
-              backgroundColor={neutralLight}
-              borderRadius="25px"
-              gap="1rem"
-              padding="0.75rem 1.5rem"
-              width="100%"
-              sx={{
-                border: `1px solid ${theme.palette.divider}`,
-                minHeight: "50px",
-              }}
+            <Box
+              component="form"
+              onSubmit={handleSearch}
+              sx={{ display: "flex", alignItems: "center" }}
             >
-              <InputBase 
-                placeholder="Search posts, people..." 
-                sx={{ 
-                  flex: 1,
-                  fontSize: "1rem",
-                  "& input::placeholder": {
-                    color: theme.palette.neutral.medium,
-                    opacity: 0.8,
-                  },
-                }}
-              />
-              <IconButton 
-                size="small"
+              <FlexBetween
+                backgroundColor={neutralLight}
+                borderRadius="25px"
+                gap="1rem"
+                padding="0.75rem 1.5rem"
+                width="100%"
                 sx={{
-                  padding: "0.5rem",
-                  "&:hover": {
-                    backgroundColor: theme.palette.primary.main + "20",
-                  },
+                  border: `1px solid ${theme.palette.divider}`,
+                  minHeight: "50px",
                 }}
               >
-                <Search sx={{ fontSize: "18px" }} />
-              </IconButton>
-            </FlexBetween>
+                <InputBase 
+                  placeholder="Search posts, people..." 
+                  value={searchQuery}
+                  onChange={handleSearchInputChange}
+                  onKeyPress={handleSearchKeyPress}
+                  sx={{ 
+                    flex: 1,
+                    fontSize: "1rem",
+                    "& input::placeholder": {
+                      color: theme.palette.neutral.medium,
+                      opacity: 0.8,
+                    },
+                  }}
+                />
+                <IconButton 
+                  type="submit"
+                  size="small"
+                  sx={{
+                    padding: "0.5rem",
+                    "&:hover": {
+                      backgroundColor: theme.palette.primary.main + "20",
+                    },
+                  }}
+                >
+                  <Search sx={{ fontSize: "18px" }} />
+                </IconButton>
+              </FlexBetween>
+            </Box>
 
             {isUserAuthenticated ? (
               <Box display="flex" flexDirection="column" gap="2rem" alignItems="center" mt="1rem">
@@ -557,6 +768,118 @@ const Navbar = () => {
           </Box>
         </Box>
       )}
+
+      {/* Notifications Popover - Shared for both Desktop and Mobile */}
+      <Popover
+        id={id}
+        open={open}
+        anchorEl={anchorEl}
+        onClose={handleNotificationClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'center',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'center',
+        }}
+        sx={{
+          mt: 1,
+          '& .MuiPopover-paper': {
+            borderRadius: '12px',
+            boxShadow: theme.palette.mode === 'dark' 
+              ? '0 8px 32px rgba(0,0,0,0.4)' 
+              : '0 8px 32px rgba(0,0,0,0.15)',
+            border: `1px solid ${theme.palette.divider}`,
+            minWidth: isNonMobileScreens ? '350px' : '300px',
+            maxWidth: isNonMobileScreens ? '400px' : '350px',
+            maxHeight: '500px',
+          }
+        }}
+      >
+        <Box p={2}>
+          <FlexBetween mb={1}>
+            <Typography variant="h6">Notifications</Typography>
+            {notifications.length > 0 && (
+              <Tooltip title="Clear All Notifications">
+                <IconButton 
+                  onClick={handleClearAllNotifications}
+                  size="small"
+                  sx={{
+                    color: theme.palette.error.main,
+                    "&:hover": {
+                      backgroundColor: theme.palette.error.light + "20",
+                    },
+                  }}
+                >
+                  <DeleteSweep />
+                </IconButton>
+              </Tooltip>
+            )}
+          </FlexBetween>
+          <List>
+            {notifications.length > 0 ? (
+              notifications.map((notif) => (
+                <ListItem key={notif.id} divider sx={{ backgroundColor: notif.is_read ? 'transparent' : theme.palette.action.hover }}>
+                  <ListItemText primary={notif.message} secondary={new Date(notif.timestamp).toLocaleString()} />
+                  <ListItemSecondaryAction>
+                    {notif.type === 'friend_request' && !notif.is_read && (
+                      <Box>
+                        <Tooltip title="Accept">
+                          <IconButton edge="end" aria-label="accept" onClick={() => handleFriendRequestResponse(notif.friend_request?.id || notif.friend_request, 'accept')}>
+                            <Check color="success" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Decline">
+                          <IconButton edge="end" aria-label="decline" onClick={() => handleFriendRequestResponse(notif.friend_request?.id || notif.friend_request, 'decline')}>
+                            <Clear color="error" />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                    )}
+                    {!notif.is_read && notif.type !== 'friend_request' && (
+                      <Tooltip title="Mark as read">
+                        <IconButton edge="end" aria-label="read" onClick={() => handleMarkAsRead(notif.id)}>
+                          <Check />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                  </ListItemSecondaryAction>
+                </ListItem>
+              ))
+            ) : (
+              <ListItem>
+                <ListItemText primary="No new notifications." />
+              </ListItem>
+            )}
+          </List>
+        </Box>
+      </Popover>
+
+      {/* Clear All Notifications Confirmation Dialog */}
+      <Dialog
+        open={clearDialogOpen}
+        onClose={handleCancelClearAll}
+        aria-labelledby="clear-notifications-dialog-title"
+        aria-describedby="clear-notifications-dialog-description"
+      >
+        <DialogTitle id="clear-notifications-dialog-title">
+          Clear All Notifications
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="clear-notifications-dialog-description">
+            Are you sure you want to clear all notifications? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelClearAll} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleConfirmClearAll} color="error" variant="contained">
+            Clear All
+          </Button>
+        </DialogActions>
+      </Dialog>
     </FlexBetween>
   );
 };

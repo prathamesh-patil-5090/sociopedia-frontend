@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 import HomePage from "scenes/homePage";
 import LoginPage from "scenes/loginPage";
 import ProfilePage from "scenes/profilePage";
+import SearchPage from "scenes/searchPage";
 import ForgotPassword from "scenes/loginPage/ForgotPassword";
 import Auth0Callback from "scenes/auth0Callback";
 import Auth0TestPage from "scenes/auth0Test";
@@ -41,6 +42,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/search" element={<SearchPage />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/callback" element={<Auth0Callback />} />
                 <Route path="/auth0-test" element={<Auth0TestPage />} />

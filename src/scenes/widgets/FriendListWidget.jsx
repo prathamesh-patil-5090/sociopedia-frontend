@@ -13,6 +13,7 @@ const FriendListWidget = ({ userId }) => {
   const loggedInUserFriends = useSelector((state) => state.user?.friends || []);
   const loggedInUserId = useSelector((state) => state.user?._id);
   const [friends, setWidgetFriends] = useState([]);
+  const [lastFriendsCount, setLastFriendsCount] = useState(0);
 
   const isMyProfile = userId === loggedInUserId;
 
@@ -23,6 +24,8 @@ const FriendListWidget = ({ userId }) => {
         setWidgetFriends([]);
         return;
       }
+      
+      console.log("Fetching friends for userId:", userId, "isMyProfile:", isMyProfile);
       
       try {
         const friendsData = await FriendsListService.getFriends(userId, token);
@@ -40,7 +43,40 @@ const FriendListWidget = ({ userId }) => {
     getFriends();
   }, [userId, token, dispatch, isMyProfile]);
 
+  // Separate effect to handle friend count changes (friend request accepted)
+  useEffect(() => {
+    if (isMyProfile && loggedInUserFriends.length > lastFriendsCount) {
+      console.log("Friend count increased, refetching friends list");
+      setLastFriendsCount(loggedInUserFriends.length);
+      
+      // Refetch friends to get the latest data
+      const refetchFriends = async () => {
+        if (!userId || !token) return;
+        
+        try {
+          const friendsData = await FriendsListService.getFriends(userId, token);
+          setWidgetFriends(friendsData);
+        } catch (error) {
+          console.error("Error refetching friends:", error);
+        }
+      };
+      
+      refetchFriends();
+    } else if (isMyProfile) {
+      setLastFriendsCount(loggedInUserFriends.length);
+    }
+  }, [loggedInUserFriends.length, isMyProfile, userId, token, lastFriendsCount]);
+
+  // Force re-render when Redux friends change
   const friendsToDisplay = isMyProfile ? loggedInUserFriends : friends;
+
+  // Debug logging
+  console.log("FriendListWidget render:", {
+    isMyProfile,
+    loggedInUserFriendsCount: loggedInUserFriends.length,
+    localFriendsCount: friends.length,
+    friendsToDisplayCount: friendsToDisplay.length
+  });
 
   return (
     <WidgetWrapper>

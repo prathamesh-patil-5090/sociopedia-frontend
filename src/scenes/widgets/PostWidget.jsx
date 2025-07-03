@@ -377,6 +377,7 @@ const PostWidget = ({
           subtitle={props.location}
           userPicturePath={props.userPicturePath || null} // Add null fallback
           isAuth={props.isAuth && !isOwnPost} // Prevent friend actions on own posts
+          hideRequestActions={true} // Hide accept/decline buttons under posts
         />
         {showPostActions && (
           <FlexBetween gap="1rem">
@@ -569,16 +570,49 @@ const PostWidget = ({
               onClick={patchLike} 
               sx={{ 
                 color: (!props.isAuth || isDummyUser) ? "gray" : "inherit",
-                cursor: "pointer" 
+                cursor: "pointer",
+                padding: "0.5rem",
+                borderRadius: "50%",
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  backgroundColor: isLiked ? 
+                    `${primary}20` : 
+                    `${palette.neutral.light}`,
+                  transform: "scale(1.1)",
+                },
+                "&:active": {
+                  transform: "scale(0.95)",
+                },
               }}
             >
               {isLiked ? (
-                <FavoriteOutlined sx={{ color: props.isAuth ? primary : "gray" }} />
+                <FavoriteOutlined 
+                  sx={{ 
+                    color: props.isAuth ? primary : "gray",
+                    fontSize: "1.3rem",
+                    filter: props.isAuth ? "drop-shadow(0 0 4px rgba(255,0,0,0.3))" : "none",
+                  }} 
+                />
               ) : (
-                <FavoriteBorderOutlined />
+                <FavoriteBorderOutlined 
+                  sx={{ 
+                    fontSize: "1.3rem",
+                    "&:hover": {
+                      color: primary,
+                    },
+                  }} 
+                />
               )}
             </IconButton>
-            <Typography>{likeCount}</Typography>
+            <Typography 
+              sx={{ 
+                fontWeight: likeCount > 0 ? 600 : 400,
+                color: likeCount > 0 ? primary : "inherit",
+                transition: "all 0.3s ease",
+              }}
+            >
+              {likeCount}
+            </Typography>
           </FlexBetween>
 
           <FlexBetween gap="0.3rem">
@@ -586,17 +620,51 @@ const PostWidget = ({
               onClick={() => setIsComments(!isComments)}
               sx={{ 
                 color: "inherit",
-                cursor: "pointer" 
+                cursor: "pointer",
+                padding: "0.5rem",
+                borderRadius: "50%",
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  backgroundColor: palette.neutral.light,
+                  transform: "scale(1.1)",
+                  color: primary,
+                },
+                "&:active": {
+                  transform: "scale(0.95)",
+                },
               }}
             >
-              <ChatBubbleOutlineOutlined />
+              <ChatBubbleOutlineOutlined sx={{ fontSize: "1.3rem" }} />
             </IconButton>
-            <Typography>{props.comments.length}</Typography>
+            <Typography 
+              sx={{ 
+                fontWeight: props.comments.length > 0 ? 600 : 400,
+                color: props.comments.length > 0 ? primary : "inherit",
+                transition: "all 0.3s ease",
+              }}
+            >
+              {props.comments.length}
+            </Typography>
           </FlexBetween>
         </FlexBetween>
 
-        <IconButton onClick={handleShareClick}>
-          <ShareOutlined />
+        <IconButton 
+          onClick={handleShareClick}
+          sx={{
+            padding: "0.5rem",
+            borderRadius: "50%",
+            transition: "all 0.3s ease",
+            "&:hover": {
+              backgroundColor: palette.neutral.light,
+              transform: "scale(1.1)",
+              color: primary,
+            },
+            "&:active": {
+              transform: "scale(0.95)",
+            },
+          }}
+        >
+          <ShareOutlined sx={{ fontSize: "1.3rem" }} />
         </IconButton>
         
         <Menu

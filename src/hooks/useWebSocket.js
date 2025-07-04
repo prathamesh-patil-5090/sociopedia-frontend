@@ -80,11 +80,14 @@ const useWebSocket = (userId, onNotification, onFriendRequestInvalid) => {
         
         // Exponential backoff
         reconnectDelay.current = Math.min(reconnectDelay.current * 2, 30000);
+      } else if (event.code !== 1000) {
+        console.warn('WebSocket failed to reconnect after maximum attempts. Real-time notifications will be unavailable.');
       }
     };
 
     ws.current.onerror = (error) => {
       console.error('WebSocket error:', error);
+      console.warn('WebSocket connection failed - real-time notifications will be unavailable, but the app will continue to work');
     };
   }, [userId, token]);
 

@@ -112,17 +112,11 @@ class PostsService {
     }
   }
 
-  // Delete post
+  // Delete post (with automatic token refresh)
   static async deletePost(postId, userId, token) {
     try {
-      const response = await axios.delete(`${API_URL}/posts/${postId}/`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      
-      return { success: true };
+      const response = await ApiHelper.delete(`/posts/${postId}/`, {}, true);
+      return { success: true, postId };
     } catch (error) {
       throw new Error(error.response?.data?.message || error.message || "Network error occurred");
     }

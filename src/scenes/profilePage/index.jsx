@@ -25,10 +25,13 @@ const ProfilePage = () => {
 
   const getUser = async () => {
     try {
+      // Always try to get user data first
+      // The ProfileService will handle token validation and fallback to public data
       const userData = await ProfileService.getUser(userId, token);
       setUser(userData);
     } catch (error) {
       console.error("Error fetching user:", error);
+      // If we can't fetch user data, set to null which will prevent rendering
       setUser(null);
     }
   };

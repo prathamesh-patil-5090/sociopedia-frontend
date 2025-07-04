@@ -52,10 +52,8 @@ class TokenRefreshService {
       localStorage.removeItem('refreshToken');
       console.log('User logged out - tokens cleared');
       
-      // Redirect to login page
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
-      }
+      // Don't redirect during logout - let the app handle it
+      // This prevents unwanted redirects during token refresh failures
     } catch (error) {
       console.error('Failed to logout:', error);
     }
@@ -82,7 +80,6 @@ class TokenRefreshService {
     // No tokens available
     if (!token || !refreshToken) {
       console.log('No tokens found - user needs to login');
-      this.logout();
       return null;
     }
 

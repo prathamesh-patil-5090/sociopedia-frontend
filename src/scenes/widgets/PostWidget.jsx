@@ -61,15 +61,25 @@ const PostWidget = ({
   const main = palette.neutral.main;
   const primary = palette.primary.main;
 
-  const isOwner = false; // Disable all edit/delete functionality
+  const isOwner = useMemo(() => {
+    if (!loggedInUserId || !postUserId) return false;
+    // Handle both string and object postUserId
+    const actualPostUserId = typeof postUserId === 'object' ? postUserId._id || postUserId.userId : postUserId;
+    return String(loggedInUserId) === String(actualPostUserId);
+  }, [loggedInUserId, postUserId]);
 
-  const showPostActions = false; // Disable edit/delete functionality completely
+  const showPostActions = isOwner && props.isProfile; // Show edit/delete only for post owner AND on profile page
 
   // Add strict type checking for postUserId comparison
   const isOwnPost = useMemo(() => {
     if (!loggedInUserId || !postUserId) return false;
     return String(loggedInUserId) === String(postUserId);
   }, [loggedInUserId, postUserId]);
+
+  // Get the actual ID whether postUserId is an object or string for the Friend component
+  const actualPostUserId = useMemo(() => {
+    return typeof postUserId === 'object' ? postUserId._id || postUserId.userId : postUserId;
+  }, [postUserId]);
 
   const handleModalClose = () => {
     setShowAuthModal(false);
@@ -95,11 +105,6 @@ const PostWidget = ({
       }
     }
   };
-
-  // Get the actual ID whether postUserId is an object or string
-  const actualPostUserId = useMemo(() => {
-    return typeof postUserId === 'object' ? postUserId._id || postUserId.userId : postUserId;
-  }, [postUserId]);
 
   const patchLike = async () => {
     // Prevent rapid clicking
@@ -186,11 +191,23 @@ const PostWidget = ({
 
   const handleDeletePost = async () => {
     if (!token || !isOwner) return;
+    
+    // Show confirmation dialog
+    const confirmed = window.confirm('Are you sure you want to delete this post? This action cannot be undone.');
+    if (!confirmed) return;
+    
     try {
-      const updatedPosts = await PostsService.deletePost(postId, loggedInUserId, token);
+      await PostsService.deletePost(postId, loggedInUserId, token);
+      
+      // Remove the deleted post from the local state
+      const updatedPosts = posts.filter(post => post._id !== postId);
       dispatch(setPosts({ posts: updatedPosts }));
+      
+      console.log('Post deleted successfully');
     } catch (error) {
       console.error("Failed to delete post:", error);
+      // Show user-friendly error message
+      alert('Failed to delete post. Please try again.');
     }
   };
 
@@ -290,7 +307,7 @@ const PostWidget = ({
 
   // Update the picture update function
   const handleUpdatePicture = async () => {
-    if (!newPicture) return;
+    if (!newPicture || !isOwner || !props.isProfile) return;
     
     try {
       const formData = new FormData();
@@ -320,7 +337,7 @@ const PostWidget = ({
   };
 
   const handleDeletePicture = async () => {
-    if (!isOwner) return;
+    if (!isOwner || !props.isProfile) return;
     
     try {
       const updatedPost = await PostsService.deletePostPicture(postId, loggedInUserId, token);
@@ -445,7 +462,7 @@ const PostWidget = ({
             style={{ borderRadius: "0.75rem", marginTop: "0.75rem" }}
             src={PostsService.getImageUrl(props.picturePath)}
           />
-          {isOwner && (
+          {isOwner && props.isProfile && (
             <Box
               position="absolute"
               top="1rem"
@@ -545,7 +562,7 @@ const PostWidget = ({
       )}
 
       {/* Show current image if no preview */}
-      {!props.picturePath && !showPreview && isOwner && (
+      {!props.picturePath && !showPreview && isOwner && props.isProfile && (
         <Box mt="0.75rem">
           <input
             type="file"

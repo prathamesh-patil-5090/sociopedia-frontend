@@ -587,9 +587,6 @@ const MessagesPage = () => {
                       }
                     </Typography>
                     <Box display="flex" alignItems="center" gap="0.5rem">
-                      <Typography variant="body2" color={theme.palette.neutral.medium}>
-                        {selectedChat.other_participant?.isOnline ? 'Online' : 'Offline'}
-                      </Typography>
                       <Typography 
                         variant="caption" 
                         color={
@@ -620,9 +617,6 @@ const MessagesPage = () => {
                             }
                           }}
                         />
-                        {isConnected ? 'Real-time' : 
-                         connectionError ? 'Disconnected' : 
-                         'Connecting...'}
                       </Typography>
                       {typingUsers.length > 0 && (
                         <Typography 
@@ -665,24 +659,6 @@ const MessagesPage = () => {
                   }
                 >
                   {error}
-                </Alert>
-              )}
-
-              {connectionError && (
-                <Alert 
-                  severity="warning" 
-                  sx={{ mb: 2 }}
-                  action={
-                    <Button 
-                      color="inherit" 
-                      size="small" 
-                      onClick={() => window.location.reload()}
-                    >
-                      Refresh
-                    </Button>
-                  }
-                >
-                  Real-time messaging unavailable. Messages will still be delivered.
                 </Alert>
               )}
 
@@ -1145,9 +1121,6 @@ const MessagesPage = () => {
                         `${selectedChat.other_participant.firstName} ${selectedChat.other_participant.lastName}` : 
                         'Unknown User'
                       }
-                    </Typography>
-                    <Typography variant="body2" color={theme.palette.neutral.medium}>
-                      {selectedChat.other_participant?.isOnline ? 'Online' : 'Offline'}
                     </Typography>
                   </Box>
                 </FlexBetween>

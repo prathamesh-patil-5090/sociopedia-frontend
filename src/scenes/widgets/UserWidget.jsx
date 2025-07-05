@@ -136,44 +136,6 @@ const UserWidget = ({ userId, picturePath, isProfilePage = false }) => {
             </Box>
           </Box>
         </FlexBetween>
-        
-        {isOwnProfile ? (
-          <IconButton
-            sx={{
-              backgroundColor: theme.palette.neutral.light,
-              color: theme.palette.neutral.dark,
-              padding: "0.5rem",
-              border: `1px solid ${theme.palette.divider}`,
-              "&:hover": {
-                backgroundColor: theme.palette.primary.main,
-                color: theme.palette.background.alt,
-                transform: "rotate(15deg) scale(1.1)",
-                borderColor: theme.palette.primary.main,
-              },
-              transition: "all 0.3s ease",
-            }}
-          >
-            <EditOutlined />
-          </IconButton>
-        ) : (
-          <IconButton
-            sx={{
-              backgroundColor: theme.palette.neutral.light,
-              color: theme.palette.neutral.dark,
-              padding: "0.5rem",
-              border: `1px solid ${theme.palette.divider}`,
-              "&:hover": {
-                backgroundColor: theme.palette.primary.main,
-                color: theme.palette.background.alt,
-                transform: "rotate(15deg) scale(1.1)",
-                borderColor: theme.palette.primary.main,
-              },
-              transition: "all 0.3s ease",
-            }}
-          >
-            <ManageAccountsOutlined />
-          </IconButton>
-        )}
       </FlexBetween>
 
       <Divider sx={{ backgroundColor: theme.palette.divider, height: "1px" }} />

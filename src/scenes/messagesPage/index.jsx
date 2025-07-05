@@ -125,14 +125,18 @@ const MessagesPage = () => {
               return prevArray;
             }
 
-            const isFromCurrentUser = data.sender?._id === userId;
+            const isFromCurrentUser = data.sender?._id === userId || data.sender?.id === userId || 
+                                     data.sender?._id === user?._id || data.sender?.id === user?.id ||
+                                     data.sender?.username === user?.username;
             
             // If it's from current user, try to replace optimistic message
             if (isFromCurrentUser) {
               const optimisticIndex = prevArray.findIndex(msg => 
                 msg.is_optimistic && 
                 msg.content === data.content &&
-                msg.sender?._id === userId
+                (msg.sender?._id === userId || msg.sender?.id === userId || 
+                 msg.sender?._id === user?._id || msg.sender?.id === user?.id ||
+                 msg.sender?.username === user?.username)
               );
 
               if (optimisticIndex !== -1) {
@@ -478,7 +482,33 @@ const MessagesPage = () => {
 
   const isOwnMessage = (message) => {
     if (!message || !message.sender) return false;
-    return message.sender?._id === userId;
+    
+    // Temporary debug - remove after testing
+    if (message.id && typeof message.id === 'number' && message.id > 0) {
+      console.log('Message ownership check:', {
+        messageId: message.id,
+        senderId: message.sender?._id,
+        senderIdAlt: message.sender?.id,
+        senderUsername: message.sender?.username,
+        currentUserId: userId,
+        currentUserIdAlt: user?._id,
+        currentUserIdAlt2: user?.id,
+        currentUsername: user?.username,
+      });
+    }
+    
+    // Try multiple ID formats and convert to strings for comparison
+    const senderId = String(message.sender?._id || message.sender?.id || '');
+    const senderUsername = message.sender?.username;
+    
+    const currentUserId = String(userId || user?._id || user?.id || '');
+    const currentUsername = user?.username;
+    
+    // Compare by ID first, then by username as fallback
+    const matchById = senderId && currentUserId && senderId === currentUserId;
+    const matchByUsername = senderUsername && currentUsername && senderUsername === currentUsername;
+    
+    return matchById || matchByUsername;
   };
 
   if (!isAuth) {

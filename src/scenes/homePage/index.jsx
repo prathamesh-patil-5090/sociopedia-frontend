@@ -60,7 +60,7 @@ const HomePage = () => {
               color="text.secondary"
               sx={{ fontWeight: 300 }}
             >
-              Welcome to Socipedia! Browse posts or{" "}
+              Welcome to Sociopedia! Browse posts or{" "}
               <Typography 
                 component="span" 
                 sx={{ 

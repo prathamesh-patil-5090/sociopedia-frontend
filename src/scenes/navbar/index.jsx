@@ -466,7 +466,7 @@ const Navbar = () => {
               transition: "all 0.3s ease",
             }}
           >
-            Socipedia
+            Sociopedia
           </Typography>
         </Box>
         {isNonMobileScreens && (

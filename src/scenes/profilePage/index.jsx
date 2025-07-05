@@ -48,6 +48,7 @@ const ProfilePage = () => {
       <Box
         width="100%"
         padding="2rem 6%"
+        paddingBottom={isNonMobileScreens ? "2rem" : "6rem"} // Extra padding for mobile footer
         display={isNonMobileScreens ? "flex" : "block"}
         gap="2rem"
         justifyContent="center"

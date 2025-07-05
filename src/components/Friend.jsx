@@ -5,6 +5,7 @@ import { setFriends } from "state";
 import FlexBetween from "./FlexBetween";
 import UserImage from "./UserImage";
 import { useMemo, useState, useEffect } from "react";
+import { MessagingService } from "../services/MessagingService";
 
 // Create custom AddFriendIcon component
 const AddFriendIcon = (props) => {
@@ -50,6 +51,16 @@ const DeleteFriendIcon = (props) => {
     </SvgIcon>
   );
 };
+
+// Create message icon
+const MessageIcon = (props) => (
+  <SvgIcon {...props} viewBox="0 0 24 24">
+    <path d="M12 2C6.48 2 2 6.48 2 12c0 1.54.36 2.98.97 4.29L1 23l6.71-1.97C9.02 21.64 10.46 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm0 18c-1.32 0-2.58-.29-3.71-.82L4 20l.82-4.29C4.29 14.58 4 13.32 4 12c0-4.41 3.59-8 8-8s8 3.59 8 8-3.59 8-8 8z"/>
+    <circle cx="9" cy="12" r="1"/>
+    <circle cx="12" cy="12" r="1"/>
+    <circle cx="15" cy="12" r="1"/>
+  </SvgIcon>
+);
 
 const Friend = ({ friendId, name, subtitle, userPicturePath, isAuth = false, hideRequestActions = false }) => {
   const dispatch = useDispatch();
@@ -176,6 +187,29 @@ const Friend = ({ friendId, name, subtitle, userPicturePath, isAuth = false, hid
     }
   };
 
+  const handleStartConversation = async () => {
+    try {
+      const targetId = typeof friendId === 'object' ? friendId._id || friendId.userId : friendId;
+      const conversation = await MessagingService.createConversation(targetId);
+      navigate(`/messages/${conversation.id}`);
+    } catch (error) {
+      console.error('Error starting conversation:', error);
+      // If conversation already exists, try to find it and navigate
+      try {
+        const conversations = await MessagingService.getConversations();
+        const targetId = typeof friendId === 'object' ? friendId._id || friendId.userId : friendId;
+        const existingConversation = conversations.find(conv => 
+          conv.other_participant && (conv.other_participant.id === targetId || conv.other_participant._id === targetId)
+        );
+        if (existingConversation) {
+          navigate(`/messages/${existingConversation.id}`);
+        }
+      } catch (findError) {
+        console.error('Error finding existing conversation:', findError);
+      }
+    }
+  };
+
   const patchFriend = async () => {
     if (isDummyUser) {
       alert('Logged in as a dummy user. Friend requests are disabled.');
@@ -211,13 +245,20 @@ const Friend = ({ friendId, name, subtitle, userPicturePath, isAuth = false, hid
         </Box>
       </FlexBetween>
       {!isSelf && (
-        <Box>
+        <Box display="flex" gap="0.5rem">
           {friendStatus === 'friends' && (
-            <Tooltip title="Remove Friend">
-              <IconButton onClick={handleRemoveFriend} sx={{ backgroundColor: primaryLight, p: "0.6rem" }}>
-                <DeleteFriendIcon sx={{ color: primaryDark }} />
-              </IconButton>
-            </Tooltip>
+            <>
+              <Tooltip title="Send Message">
+                <IconButton onClick={handleStartConversation} sx={{ backgroundColor: primaryLight, p: "0.6rem" }}>
+                  <MessageIcon sx={{ color: primaryDark }} />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Remove Friend">
+                <IconButton onClick={handleRemoveFriend} sx={{ backgroundColor: primaryLight, p: "0.6rem" }}>
+                  <DeleteFriendIcon sx={{ color: primaryDark }} />
+                </IconButton>
+              </Tooltip>
+            </>
           )}
           {friendStatus === 'not_friends' && (
             <Tooltip title="Add Friend">
@@ -236,9 +277,9 @@ const Friend = ({ friendId, name, subtitle, userPicturePath, isAuth = false, hid
             </Tooltip>
           )}
           {friendStatus === 'request_received' && !hideRequestActions && (
-            <Box>
+            <Box display="flex" gap="0.5rem">
               <Tooltip title="Accept Request">
-                <IconButton onClick={() => handleRespondToRequest('accept')} sx={{ backgroundColor: 'lightgreen', p: "0.6rem", mr: 1 }}>
+                <IconButton onClick={() => handleRespondToRequest('accept')} sx={{ backgroundColor: 'lightgreen', p: "0.6rem" }}>
                   <SvgIcon>
                     <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z" />
                   </SvgIcon>

@@ -3,6 +3,8 @@ import HomePage from "scenes/homePage";
 import LoginPage from "scenes/loginPage";
 import ProfilePage from "scenes/profilePage";
 import SearchPage from "scenes/searchPage";
+import FriendsPage from "scenes/friendsPage";
+import MessagesPage from "scenes/messagesPage";
 import ForgotPassword from "scenes/loginPage/ForgotPassword";
 import Auth0Callback from "scenes/auth0Callback";
 import Auth0TestPage from "scenes/auth0Test";
@@ -13,6 +15,7 @@ import { CssBaseline, ThemeProvider } from "@mui/material";
 import { createTheme } from "@mui/material/styles";
 import { themeSettings } from "./theme";
 import Footer from "components/Footer";
+import MobileFooter from "components/MobileFooter";
 import { Box } from "@mui/material";
 import { setLogout } from "state";
 import { Auth0Provider } from "@auth0/auth0-react";
@@ -41,8 +44,12 @@ function App() {
             <Box display="flex" flexDirection="column" minHeight="100vh">
               <Routes>
                 <Route path="/" element={<HomePage />} />
+                <Route path="/home" element={<HomePage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/search" element={<SearchPage />} />
+                <Route path="/friends" element={<FriendsPage />} />
+                <Route path="/messages" element={<MessagesPage />} />
+                <Route path="/messages/:chatId" element={<MessagesPage />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/callback" element={<Auth0Callback />} />
                 <Route path="/auth0-test" element={<Auth0TestPage />} />
@@ -53,6 +60,7 @@ function App() {
                 />
               </Routes>
               <Footer />
+              <MobileFooter />
             </Box>
           </ThemeProvider>
         </BrowserRouter>

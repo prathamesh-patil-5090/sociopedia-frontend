@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Box, Typography, useTheme, InputBase, IconButton, Divider } from "@mui/material";
+import { Box, Typography, useTheme, useMediaQuery, InputBase, IconButton, Divider } from "@mui/material";
 import { Search } from "@mui/icons-material";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -12,6 +12,7 @@ const SearchPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const theme = useTheme();
+  const isNonMobileScreens = useMediaQuery("(min-width:1000px)");
   const token = useSelector((state) => state.token);
   const user = useSelector((state) => state.user);
   
@@ -81,6 +82,7 @@ const SearchPage = () => {
       <Box
         width="100%"
         padding="2rem 6%"
+        paddingBottom={isNonMobileScreens ? "2rem" : "6rem"} // Extra padding for mobile footer
         display="flex"
         flexDirection="column"
         gap="1.5rem"

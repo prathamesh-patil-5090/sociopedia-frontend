@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setFriends } from "state";
 import FriendsListService from "../../services/FriendsListService";
 
-const FriendListWidget = ({ userId }) => {
+const FriendListWidget = ({ userId, isProfile = true, showTitle = true, onFriendRemoved }) => {
   const dispatch = useDispatch();
   const { palette } = useTheme();
   const token = useSelector((state) => state.token);

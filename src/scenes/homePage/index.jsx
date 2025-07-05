@@ -21,6 +21,7 @@ const HomePage = () => {
       <Box
         width="100%"
         padding="2rem 6%"
+        paddingBottom={isNonMobileScreens ? "2rem" : "6rem"} // Extra padding for mobile footer
         display={isNonMobileScreens ? "flex" : "block"}
         flexDirection={isNonMobileScreens ? "row" : "column"}
         gap="2rem"

@@ -43,6 +43,7 @@ const LoginPage = () => {
         alignItems="center"
         flexGrow={1}
         p="2rem"
+        paddingBottom={isNonMobileScreens ? "2rem" : "6rem"} // Extra padding for mobile footer
       >
         <Paper
           elevation={3}

@@ -30,7 +30,6 @@ import {
   Send, 
   MoreVert,
   ArrowBack,
-  PhotoCamera,
   Edit,
   Delete,
   Check,
@@ -633,9 +632,6 @@ const MessagesPage = () => {
                     </Box>
                   </Box>
                 </FlexBetween>
-                <IconButton>
-                  <MoreVert />
-                </IconButton>
               </FlexBetween>
             </Paper>
 
@@ -833,12 +829,6 @@ const MessagesPage = () => {
                       onChange={handleImageSelect}
                       style={{ display: 'none' }}
                     />
-                    <IconButton
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={sendingMessage}
-                    >
-                      <PhotoCamera />
-                    </IconButton>
                     
                     <InputBase
                       placeholder="Type a message..."
@@ -1306,12 +1296,6 @@ const MessagesPage = () => {
                       onChange={handleImageSelect}
                       style={{ display: 'none' }}
                     />
-                    <IconButton
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={sendingMessage}
-                    >
-                      <PhotoCamera />
-                    </IconButton>
                     
                     <InputBase
                       placeholder="Type a message..."

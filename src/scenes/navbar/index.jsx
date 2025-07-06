@@ -63,21 +63,23 @@ const AuthButtons = ({ theme, navigate, isMobile = false }) => {
         startIcon={<Person />}
         onClick={() => navigate("/login")}
         sx={{
-          borderColor: theme.palette.primary.main,
-          color: theme.palette.primary.main,
+          borderColor: theme.palette.mode === "dark" ? "#66b3ff" : theme.palette.primary.main,
+          color: theme.palette.mode === "dark" ? "#66b3ff" : theme.palette.primary.main,
           padding: isMobile ? "0.75rem 1.5rem" : "0.5rem 1.5rem",
           borderRadius: "25px",
           width: isMobile ? "85%" : "auto",
           fontSize: isMobile ? "1rem" : "0.9rem",
           fontWeight: 500,
           textTransform: "none",
-          border: `2px solid ${theme.palette.primary.main}`,
+          border: `2px solid ${theme.palette.mode === "dark" ? "#66b3ff" : theme.palette.primary.main}`,
           "&:hover": {
-            backgroundColor: theme.palette.primary.main,
+            backgroundColor: theme.palette.mode === "dark" ? "#66b3ff" : theme.palette.primary.main,
             color: theme.palette.background.alt,
             transform: "translateY(-1px)",
-            boxShadow: `0 4px 12px ${theme.palette.primary.main}40`,
-            borderColor: theme.palette.primary.main,
+            boxShadow: theme.palette.mode === "dark" 
+              ? "0 4px 12px rgba(102, 179, 255, 0.4)" 
+              : `0 4px 12px ${theme.palette.primary.main}40`,
+            borderColor: theme.palette.mode === "dark" ? "#66b3ff" : theme.palette.primary.main,
           },
           transition: "all 0.3s ease",
         }}

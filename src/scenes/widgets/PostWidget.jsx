@@ -57,7 +57,8 @@ const PostWidget = ({
   const posts = useSelector((state) => state.posts);
   const isDummyUser = loggedInUser?._id === "67b1d55da90d9304b1f869d5";
 
-  const { palette } = useTheme();
+  const theme = useTheme();
+  const { palette } = theme;
   const main = palette.neutral.main;
   const primary = palette.primary.main;
 
@@ -603,7 +604,7 @@ const PostWidget = ({
                 transition: "all 0.3s ease",
                 "&:hover": {
                   backgroundColor: isLiked ? 
-                    `${primary}20` : 
+                    "#ff444420" : 
                     `${palette.neutral.light}`,
                   transform: "scale(1.1)",
                 },
@@ -615,17 +616,18 @@ const PostWidget = ({
               {isLiked ? (
                 <FavoriteOutlined 
                   sx={{ 
-                    color: props.isAuth ? primary : "gray",
+                    color: props.isAuth ? "#ff4444" : "gray",
                     fontSize: "1.3rem",
-                    filter: props.isAuth ? "drop-shadow(0 0 4px rgba(255,0,0,0.3))" : "none",
+                    filter: props.isAuth ? "drop-shadow(0 0 4px rgba(255,68,68,0.4))" : "none",
                   }} 
                 />
               ) : (
                 <FavoriteBorderOutlined 
                   sx={{ 
                     fontSize: "1.3rem",
+                    color: theme.palette.mode === "dark" ? theme.palette.neutral.dark : "inherit",
                     "&:hover": {
-                      color: primary,
+                      color: "#ff4444",
                     },
                   }} 
                 />
@@ -634,7 +636,7 @@ const PostWidget = ({
             <Typography 
               sx={{ 
                 fontWeight: likeCount > 0 ? 600 : 400,
-                color: likeCount > 0 ? primary : "inherit",
+                color: likeCount > 0 ? "#ff4444" : "inherit",
                 transition: "all 0.3s ease",
               }}
             >
@@ -654,7 +656,7 @@ const PostWidget = ({
                 "&:hover": {
                   backgroundColor: palette.neutral.light,
                   transform: "scale(1.1)",
-                  color: primary,
+                  color: theme.palette.mode === "dark" ? "#66b3ff" : primary,
                 },
                 "&:active": {
                   transform: "scale(0.95)",
@@ -666,7 +668,7 @@ const PostWidget = ({
             <Typography 
               sx={{ 
                 fontWeight: props.comments.length > 0 ? 600 : 400,
-                color: props.comments.length > 0 ? primary : "inherit",
+                color: props.comments.length > 0 ? (theme.palette.mode === "dark" ? "#66b3ff" : primary) : "inherit",
                 transition: "all 0.3s ease",
               }}
             >
@@ -684,7 +686,7 @@ const PostWidget = ({
             "&:hover": {
               backgroundColor: palette.neutral.light,
               transform: "scale(1.1)",
-              color: primary,
+              color: theme.palette.mode === "dark" ? "#66b3ff" : primary,
             },
             "&:active": {
               transform: "scale(0.95)",

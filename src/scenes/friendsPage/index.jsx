@@ -135,12 +135,12 @@ const FriendsPage = () => {
             onChange={handleTabChange}
             sx={{
               '& .MuiTabs-indicator': {
-                backgroundColor: theme.palette.primary.main,
+                backgroundColor: theme.palette.mode === "dark" ? "#66b3ff" : theme.palette.primary.main,
               },
               '& .MuiTab-root': {
                 color: theme.palette.neutral.medium,
                 '&.Mui-selected': {
-                  color: theme.palette.primary.main,
+                  color: theme.palette.mode === "dark" ? "#66b3ff" : theme.palette.primary.main,
                 },
               },
             }}

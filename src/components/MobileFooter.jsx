@@ -107,10 +107,10 @@ const MobileFooter = () => {
             minWidth: 'auto',
             padding: '6px 12px 8px',
             '&.Mui-selected': {
-              color: theme.palette.primary.main,
+              color: theme.palette.mode === "dark" ? "#66b3ff" : theme.palette.primary.main,
             },
             '&:hover': {
-              color: theme.palette.primary.light,
+              color: theme.palette.mode === "dark" ? "#66b3ff" : theme.palette.primary.light,
             },
           },
         }}

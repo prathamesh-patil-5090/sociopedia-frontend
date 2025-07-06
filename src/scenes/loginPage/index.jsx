@@ -29,7 +29,9 @@ const LoginPage = () => {
           fontSize="32px"
           color="primary"
           sx={{
-            "&:hover": { color: theme.palette.primary.light },
+            "&:hover": { 
+              color: theme.palette.mode === "dark" ? "#66b3ff" : theme.palette.primary.light 
+            },
             transition: "color 0.3s ease",
           }}
         >

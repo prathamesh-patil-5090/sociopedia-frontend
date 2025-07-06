@@ -211,10 +211,12 @@ const PostsWidget = ({ userId, isProfile = false, isAuth = false }) => {
 
         // Use Auth0 profile picture if available, otherwise fallback to userPicturePath
         // Check multiple possible sources for the profile picture
-        const displayUserPicture = user?.picture_path || user?.picturePath || userPicturePath;
+        const displayUserPicture = user?.picture || user?.picture_path || user?.picturePath || userPicturePath;
         
         // Debug logging (remove in production)
-        if (user?.picture_path) {
+        if (user?.picture) {
+          console.log(`Post ${_id}: Using Auth0 picture: ${user.picture}`);
+        } else if (user?.picture_path) {
           console.log(`Post ${_id}: Using Auth0 picture_path: ${user.picture_path}`);
         } else if (user?.picturePath) {
           console.log(`Post ${_id}: Using user.picturePath: ${user.picturePath}`);

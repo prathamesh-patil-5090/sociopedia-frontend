@@ -63,7 +63,9 @@ const ForgotPassword = () => {
           onClick={() => navigate("/")}
           sx={{ 
             cursor: "pointer",
-            "&:hover": { color: palette.primary.light }
+            "&:hover": { 
+              color: theme.palette.mode === "dark" ? "#66b3ff" : palette.primary.light 
+            }
           }}
         >
           Socipedia
@@ -170,10 +172,10 @@ const ForgotPassword = () => {
                   sx={{
                     m: "2rem 0",
                     p: "1rem",
-                    backgroundColor: palette.primary.main,
+                    backgroundColor: theme.palette.mode === "dark" ? "#66b3ff" : palette.primary.main,
                     color: "white",
                     "&:hover": { 
-                      backgroundColor: palette.primary.dark,
+                      backgroundColor: theme.palette.mode === "dark" ? "#4d9fff" : palette.primary.dark,
                       color: "white"
                     },
                     "&:disabled": {
@@ -194,10 +196,10 @@ const ForgotPassword = () => {
                   onClick={() => !isLoading && navigate("/")}
                   sx={{
                     textDecoration: "underline",
-                    color: isLoading ? palette.neutral.medium : palette.primary.main,
+                    color: isLoading ? palette.neutral.medium : (theme.palette.mode === "dark" ? "#66b3ff" : palette.primary.main),
                     "&:hover": {
                       cursor: isLoading ? "not-allowed" : "pointer",
-                      color: isLoading ? palette.neutral.medium : palette.primary.light,
+                      color: isLoading ? palette.neutral.medium : (theme.palette.mode === "dark" ? "#4d9fff" : palette.primary.light),
                     },
                     textAlign: "center",
                   }}

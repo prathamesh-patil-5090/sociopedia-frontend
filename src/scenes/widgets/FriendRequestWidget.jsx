@@ -159,7 +159,7 @@ const FriendRequestWidget = ({
               <ListItem sx={{ px: 0 }}>
                 <ListItemAvatar>
                   <Avatar 
-                    src={sender.picturePath || sender.picture} 
+                    src={sender.picture || sender.picture_path || sender.picturePath} 
                     alt={`${sender.firstName} ${sender.lastName}`}
                   >
                     {sender.firstName.charAt(0).toUpperCase()}
@@ -191,11 +191,11 @@ const FriendRequestWidget = ({
                       onClick={() => handleAcceptRequest(request.id)}
                       disabled={loading}
                       sx={{
-                        backgroundColor: theme.palette.primary.main,
+                        backgroundColor: theme.palette.mode === "dark" ? "#66b3ff" : theme.palette.primary.main,
                         borderRadius: "3rem",
                         textTransform: "none",
                         "&:hover": {
-                          backgroundColor: theme.palette.primary.dark,
+                          backgroundColor: theme.palette.mode === "dark" ? "#4d9fff" : theme.palette.primary.dark,
                         },
                       }}
                     >

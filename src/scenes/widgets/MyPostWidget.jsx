@@ -29,7 +29,8 @@ const MyPostWidget = ({ picturePath }) => {
   const [imagePreview, setImagePreview] = useState(null);
   const [imageError, setImageError] = useState("");
   const [post, setPost] = useState("");
-  const { palette } = useTheme();
+  const theme = useTheme();
+  const { palette } = theme;
   const { _id } = useSelector((state) => state.user);
   const token = useSelector((state) => state.token);
   const posts = useSelector((state) => state.posts); // Get current posts
@@ -135,7 +136,7 @@ const MyPostWidget = ({ picturePath }) => {
               <FlexBetween>
                 <Box
                   {...getRootProps()}
-                  border={`2px dashed ${palette.primary.main}`}
+                  border={`2px dashed ${theme.palette.mode === "dark" ? "#66b3ff" : palette.primary.main}`}
                   p="1rem"
                   width="100%"
                   sx={{ "&:hover": { cursor: "pointer" } }}

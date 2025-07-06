@@ -96,7 +96,7 @@ const FriendListWidget = ({ userId, isProfile = true, showTitle = true, onFriend
                 friendId={friend._id}
                 name={`${friend.firstName} ${friend.lastName}`}
                 subtitle={friend.occupation}
-                userPicturePath={friend.picture_path || friend.picturePath || null}
+                userPicturePath={friend.picture || friend.picture_path || friend.picturePath || null}
                 isAuth={true}
               />
             ))

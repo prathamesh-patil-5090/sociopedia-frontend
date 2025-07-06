@@ -76,7 +76,8 @@ const Form = () => {
   const [submitError, setSubmitError] = useState("");
   const [submitSuccess, setSubmitSuccess] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
-  const { palette } = useTheme();
+  const theme = useTheme();
+  const { palette } = theme;
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -304,11 +305,16 @@ const Form = () => {
                     {({ getRootProps, getInputProps, isDragActive }) => (
                       <Box
                         {...getRootProps()}
-                        border={`2px dashed ${isDragActive ? palette.primary.light : palette.primary.main}`}
+                        border={`2px dashed ${isDragActive 
+                          ? (theme.palette.mode === "dark" ? "#4d9fff" : palette.primary.light)
+                          : (theme.palette.mode === "dark" ? "#66b3ff" : palette.primary.main)
+                        }`}
                         p="1rem"
                         sx={{ 
                           "&:hover": { cursor: isLoading ? "not-allowed" : "pointer" },
-                          backgroundColor: isDragActive ? palette.primary.light + "10" : "transparent"
+                          backgroundColor: isDragActive 
+                            ? (theme.palette.mode === "dark" ? "#66b3ff10" : palette.primary.light + "10") 
+                            : "transparent"
                         }}
                       >
                         <input {...getInputProps()} />
@@ -345,7 +351,7 @@ const Form = () => {
                           height: "100px",
                           objectFit: "cover",
                           borderRadius: "8px",
-                          border: `2px solid ${palette.primary.main}`
+                          border: `2px solid ${theme.palette.mode === "dark" ? "#66b3ff" : palette.primary.main}`
                         }}
                       />
                     </Box>
@@ -421,10 +427,10 @@ const Form = () => {
               sx={{
                 m: "2rem 0",
                 p: "1rem",
-                backgroundColor: palette.primary.main,
+                backgroundColor: theme.palette.mode === "dark" ? "#66b3ff" : palette.primary.main,
                 color: palette.background.alt,
                 "&:hover": { 
-                  backgroundColor: palette.primary.dark,
+                  backgroundColor: theme.palette.mode === "dark" ? "#4d9fff" : palette.primary.dark,
                   color: palette.background.alt 
                 },
                 "&:disabled": {
@@ -460,10 +466,10 @@ const Form = () => {
                 onClick={() => !isLoading && handlePageTypeChange(resetForm)}
                 sx={{
                   textDecoration: "underline",
-                  color: isLoading ? palette.neutral.medium : palette.primary.main,
+                  color: isLoading ? palette.neutral.medium : (theme.palette.mode === "dark" ? "#66b3ff" : palette.primary.main),
                   "&:hover": {
                     cursor: isLoading ? "not-allowed" : "pointer",
-                    color: isLoading ? palette.neutral.medium : palette.primary.light,
+                    color: isLoading ? palette.neutral.medium : (theme.palette.mode === "dark" ? "#4d9fff" : palette.primary.light),
                   },
                 }}
               >
@@ -477,10 +483,10 @@ const Form = () => {
                   onClick={() => !isLoading && navigate("/forgot-password")}
                   sx={{
                     textDecoration: "underline",
-                    color: isLoading ? palette.neutral.medium : palette.primary.main,
+                    color: isLoading ? palette.neutral.medium : (theme.palette.mode === "dark" ? "#66b3ff" : palette.primary.main),
                     "&:hover": {
                       cursor: isLoading ? "not-allowed" : "pointer",
-                      color: isLoading ? palette.neutral.medium : palette.primary.light,
+                      color: isLoading ? palette.neutral.medium : (theme.palette.mode === "dark" ? "#4d9fff" : palette.primary.light),
                     },
                   }}
                 >
